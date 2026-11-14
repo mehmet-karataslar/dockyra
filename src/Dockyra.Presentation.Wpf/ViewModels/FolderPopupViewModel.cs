@@ -85,6 +85,11 @@ public sealed partial class FolderPopupViewModel : ObservableObject
         StatusMessage = result.IsSuccess
             ? $"{entry.DisplayName} başlatıldı."
             : result.ErrorMessage ?? "Uygulama başlatılamadı.";
+
+        if (result.IsSuccess)
+        {
+            IsOpen = false;
+        }
     }
 
     private void RefreshFilteredItems()

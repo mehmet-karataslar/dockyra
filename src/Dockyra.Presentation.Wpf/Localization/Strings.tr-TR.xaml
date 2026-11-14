@@ -1,6 +1,7 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:sys="clr-namespace:System;assembly=System.Runtime">
+  <!-- Existing Core Keys (Preserved for UI Tests) -->
   <sys:String x:Key="Loc.App.Title">Dockyra Görev Çubuğu</sys:String>
   <sys:String x:Key="Loc.Section.Groups">Gruplar</sys:String>
   <sys:String x:Key="Loc.Section.OpenWindows">Açık Pencereler</sys:String>
@@ -10,8 +11,62 @@
   <sys:String x:Key="Loc.Action.RefreshWindows">Pencereleri Yenile</sys:String>
   <sys:String x:Key="Loc.Action.OpenSettings">Ayarlar</sys:String>
   <sys:String x:Key="Loc.Action.CyclePowerMode">Güç Modu</sys:String>
-  <sys:String x:Key="Loc.Settings.Title">Dockyra Ayarları</sys:String>
+  <sys:String x:Key="Loc.Settings.Title">Dockyra Kişiselleştirme ve Yönetim Stüdyosu</sys:String>
   <sys:String x:Key="Loc.Settings.ResetLayout">Düzeni Sıfırla</sys:String>
   <sys:String x:Key="Loc.Settings.ExportBackup">JSON Yedek Dışa Aktar</sys:String>
-</ResourceDictionary>
 
+  <!-- Studio Header & Navigation -->
+  <sys:String x:Key="Loc.Studio.Badge">◆ DOCKYRA STÜDYO</sys:String>
+  <sys:String x:Key="Loc.Studio.Subtitle">Yaptığınız her renk, boyut, genişlik ve ikon şekli değişikliği görev çubuğuna anında canlı olarak yansır.</sys:String>
+  <sys:String x:Key="Loc.Studio.LanguageLabel">Dil / Language:</sys:String>
+  <sys:String x:Key="Loc.Tab.Colors">🎨 1. Renk &amp; Tema</sys:String>
+  <sys:String x:Key="Loc.Tab.Layout">📐 2. Boyut, Genişlik &amp; İkon Şekli</sys:String>
+  <sys:String x:Key="Loc.Tab.Folders">📁 3. Klasörler &amp; Sürükle-Bırak</sys:String>
+  <sys:String x:Key="Loc.Tab.Profiles">⚡ 4. Profiller &amp; Güç</sys:String>
+  <sys:String x:Key="Loc.Tab.Backup">💾 5. Yedekleme &amp; Sıfırlama</sys:String>
+
+  <!-- Tab 1: Colors -->
+  <sys:String x:Key="Loc.Colors.PresetsTitle">Doğal ve Mat Renk Paletleri (Tıkladığınız Anda Uygulanır)</sys:String>
+  <sys:String x:Key="Loc.Colors.SurfaceTitle">Görev Çubuğu Arka Plan Rengi</sys:String>
+  <sys:String x:Key="Loc.Colors.AccentTitle">Vurgu ve Klasör Rengi</sys:String>
+
+  <!-- Tab 2: Dimensions, Width & Icon Shape -->
+  <sys:String x:Key="Loc.Layout.DimensionsTitle">Anlık Boyut, Genişlik ve Şeffaflık Kontrolü</sys:String>
+  <sys:String x:Key="Loc.Layout.BarHeight">Görev Çubuğu Yüksekliği (px):</sys:String>
+  <sys:String x:Key="Loc.Layout.BarWidth">Görev Çubuğu Genişliği (% Ekran):</sys:String>
+  <sys:String x:Key="Loc.Layout.IconSize">Görev Çubuğu İkon Boyutu (px):</sys:String>
+  <sys:String x:Key="Loc.Layout.CornerRadius">Çubuk Dış Köşe Yuvarlaklığı:</sys:String>
+  <sys:String x:Key="Loc.Layout.Opacity">Görev Çubuğu Opaklığı (%):</sys:String>
+  <sys:String x:Key="Loc.Layout.IconShapeTitle">İkon ve Kutu Tasarım Şekli (Yuvarlak / Kare)</sys:String>
+  <sys:String x:Key="Loc.Layout.ShapeCircle">◯ Tam Yuvarlak</sys:String>
+  <sys:String x:Key="Loc.Layout.ShapeRoundedSquare">▢ Yumuşak Kare</sys:String>
+  <sys:String x:Key="Loc.Layout.ShapeSquare">▭ Keskin Kare</sys:String>
+  <sys:String x:Key="Loc.Layout.ShapeCapsule">⬭ Kapsül (Pill)</sys:String>
+  <sys:String x:Key="Loc.Layout.PositionTitle">Konum ve Görünür Bölümler</sys:String>
+  <sys:String x:Key="Loc.Layout.DockEdge">Ekran Kenarı:</sys:String>
+  <sys:String x:Key="Loc.Layout.Alignment">Hizalama:</sys:String>
+  <sys:String x:Key="Loc.Layout.ShowStart">⊞ Başlat Menüsü Butonunu Göster</sys:String>
+  <sys:String x:Key="Loc.Layout.ShowWindows">🪟 Sabitlenen ve Açık Uygulamaları Göster</sys:String>
+  <sys:String x:Key="Loc.Layout.ShowClock">🕒 Sağ Sistem Tepsisinde Saat ve Tarihi Göster</sys:String>
+  <sys:String x:Key="Loc.Layout.ShowPower">🔋 Wi-Fi, Bluetooth ve Pil Göstergelerini Göster</sys:String>
+
+  <!-- Tab 3: Folders & Drag-Drop -->
+  <sys:String x:Key="Loc.Folders.Col1Title">1. Görev Çubuğu Klasörleri</sys:String>
+  <sys:String x:Key="Loc.Folders.Col1Sub">Sıralamak için sürükleyin veya renk seçin:</sys:String>
+  <sys:String x:Key="Loc.Folders.Col2Title">2. Seçili Klasörün İçindeki Uygulamalar</sys:String>
+  <sys:String x:Key="Loc.Folders.Col2Sub">Sağdaki uygulamaları buraya sürükleyip bırakın:</sys:String>
+  <sys:String x:Key="Loc.Folders.Col3Title">3. Mevcut Görev Çubuğu Uygulamaları</sys:String>
+  <sys:String x:Key="Loc.Folders.Col3Sub">Tutup ortadaki klasöre sürükleyin veya Ekle'ye basın:</sys:String>
+  <sys:String x:Key="Loc.Folders.BrowseBtn">📂 Bilgisayardan Uygulama Seç (.exe / .lnk)...</sys:String>
+  <sys:String x:Key="Loc.Folders.AddBtn">⬅ Ekle</sys:String>
+
+  <!-- Taskbar Window Buttons -->
+  <sys:String x:Key="Loc.Taskbar.Start">Başlat</sys:String>
+  <sys:String x:Key="Loc.Taskbar.Studio">Stüdyo</sys:String>
+  <sys:String x:Key="Loc.Taskbar.ReturnMicrosoft">🔄 Microsoft Çubuğu</sys:String>
+
+  <!-- Bottom Action Bar -->
+  <sys:String x:Key="Loc.Action.FullTaskbar">🚀 Tam Görev Çubuğu Olarak Uygula</sys:String>
+  <sys:String x:Key="Loc.Action.OverlayTaskbar">🔗 Mevcut Çubuk Üzerine Entegre Et</sys:String>
+  <sys:String x:Key="Loc.Action.RestoreMicrosoft">⏪ Orijinal Microsoft Çubuğuna Dön</sys:String>
+</ResourceDictionary>

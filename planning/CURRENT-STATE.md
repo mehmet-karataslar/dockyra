@@ -20,13 +20,13 @@ Dockyra has been initialized from scratch on `.NET 10` (`SDK 10.0.301`) on Windo
 | Module ID | Name | Status | Verified Capabilities |
 |---|---|---|---|
 | `MOD-CORE` | Core Foundation & Module Host | `active` | Clean Architecture wiring, fault-isolated `ModuleHostService`, `SafeModeStartupCoordinator`, Serilog rolling logger. |
-| `MOD-TASKBAR` | Taskbar Shell & Layout | `in-progress` | `TaskbarLayout` domain model, section validation, `TaskbarOrchestrationService`, WPF `TaskbarWindow` & `TaskbarViewModel`. |
-| `MOD-GROUPS` | Application Groups | `in-progress` | `ApplicationGroup` entity, `SmartGroupingRuleEngine` (user rules prioritized over built-in rules), `ApplicationGroupService`, SQLite persistence. |
+| `MOD-TASKBAR` | Taskbar Shell & Layout | `in-progress` | `TaskbarLayout` domain model, section validation, `TaskbarOrchestrationService`, dual-mode (`NativeOverlay` & `FullReplacement`) WPF `TaskbarWindow` & `TaskbarViewModel`, native `Shell_TrayWnd` geometry docking, and Windows Start Menu trigger. |
+| `MOD-GROUPS` | Application Groups | `in-progress` | `ApplicationGroup` entity, `SmartGroupingRuleEngine` (user rules prioritized over built-in rules), `ApplicationGroupService`, automatic Windows 11 pinned taskbar shortcut (`*.lnk`) synchronization (`SyncNativePinnedAppsAsync`), SQLite persistence. |
 | `MOD-FOLDERS` | Folder Flyouts & Hierarchy | `in-progress` | `FolderItem` tree with max-depth & cycle validation (`FolderHierarchyRules`), WPF `FolderFlyoutControl` with search filtering and Grid/List toggle. |
 | `MOD-WINDOWS` | Open Window Tracking | `in-progress` | `Win32WindowManager` using `EnumWindows`, `DwmGetWindowAttribute(DWMWA_CLOAKED)`, `SetWinEventHook` + `EventCoalescer`, `ActivateWindowAsync`, `MinimizeWindowAsync`, `RestoreWindowAsync`, `CloseWindowAsync`. |
 | `MOD-PROFILES` | Work Profiles | `in-progress` | `WorkProfile` domain model, built-in default profiles (*Software Development*, *Daily Use*, *Gaming*), SQLite persistence, profile switching in `TaskbarViewModel`. |
 | `MOD-THEMES` | Fluent Design Tokens & Themes | `in-progress` | Centralized `DesignTokens/` (`Colors`, `Spacing`, `Radius`, `Typography`), Dark/Light theme dictionaries, `tr-TR` and `en-US` localization dictionaries. |
-| `MOD-SETTINGS` | Settings & Persistence | `in-progress` | Versioned SQLite migrations (`DatabaseMigrator`), `SqliteUserSettingsRepository`, schema-versioned JSON settings export/import, initial `SettingsWindow` UI. |
+| `MOD-SETTINGS` | Settings & Persistence | `in-progress` | Versioned SQLite migrations (`DatabaseMigrator`), `SqliteUserSettingsRepository`, schema-versioned JSON settings export/import, and comprehensive startup `SettingsWindow` Personalization Studio (Color Palettes, Geometry Sliders, 3-Column Drag-and-Drop Group/App Organizer, Profiles, Power, and 1-Click Microsoft ↔ Dockyra Taskbar Switcher). |
 | `MOD-PERFORMANCE` | Event Coalescing & Diagnostics | `in-progress` | `EventCoalescer` throttling rapid OS events, memory/throughput benchmarks in `Dockyra.PerformanceTests`. |
 | `MOD-POWER` | Adaptive Power Management | `in-progress` | `Win32PowerMonitor` (`GetSystemPowerStatus` + power event notifications) and `PowerModeCoordinator` (`PowerSaver`, `Balanced`, `Performance`). |
 

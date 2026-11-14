@@ -177,6 +177,87 @@ public sealed class DomainAndApplicationUnitTests
         Assert.Single(vm.FolderPopup.FilteredApplications);
     }
 
+    [Fact]
+    public async Task TaskbarViewModel_SyncsNativePinnedItems_AndTogglesIntegrationModesReversibly()
+    {
+        var layoutRepo = new InMemoryLayoutRepo();
+        var groupRepo = new InMemoryGroupRepo();
+        var profileRepo = new InMemoryProfileRepo();
+        var settingsRepo = new InMemorySettingsRepo();
+        var fakeWinMgr = new FakeWindowManager();
+        var fakePower = new FakePowerMonitor(new PowerState(PowerSourceKind.AcPower, 100, false));
+        var fakeTaskbarVisibility = new FakeTaskbarVisibilityService();
+
+        var taskbarService = new TaskbarOrchestrationService(layoutRepo, NullLogger<TaskbarOrchestrationService>.Instance);
+        var groupService = new ApplicationGroupService(groupRepo, new SmartGroupingRuleEngine(), NullLogger<ApplicationGroupService>.Instance);
+        var profileService = new ProfileManagementService(profileRepo, settingsRepo, NullLogger<ProfileManagementService>.Instance);
+        var switchUseCase = new WindowSwitchUseCase(fakeWinMgr);
+        using var powerCoord = new PowerModeCoordinator(fakePower, NullLogger<PowerModeCoordinator>.Instance);
+        var folderVm = new FolderPopupViewModel(groupService, new FakeLauncher());
+
+        using (var vm = new TaskbarViewModel(
+            taskbarService,
+            groupService,
+            profileService,
+            fakeWinMgr,
+            switchUseCase,
+            powerCoord,
+            folderVm,
+            fakeTaskbarVisibility,
+            new FakeLauncher(),
+            settingsRepo))
+        {
+            await vm.InitializeAsync();
+
+            Assert.False(vm.IsDockyraActive);
+            Assert.False(fakeTaskbarVisibility.IsNativeTaskbarHiddenByDockyra);
+            Assert.Contains(vm.Groups, g => g.Id == "grp-pinned");
+
+            await vm.SwapWithMicrosoftTaskbarAsync();
+            Assert.True(vm.IsDockyraActive);
+            Assert.Equal(TaskbarIntegrationMode.FullReplacement, vm.IntegrationMode);
+            Assert.True(vm.IsFullReplacementMode);
+            Assert.True(fakeTaskbarVisibility.IsNativeTaskbarHiddenByDockyra);
+
+            await vm.ToggleIntegrationModeAsync();
+            Assert.Equal(TaskbarIntegrationMode.NativeOverlay, vm.IntegrationMode);
+            Assert.False(fakeTaskbarVisibility.IsNativeTaskbarHiddenByDockyra);
+
+            await vm.SwapWithMicrosoftTaskbarAsync();
+            Assert.Equal(TaskbarIntegrationMode.FullReplacement, vm.IntegrationMode);
+            Assert.True(fakeTaskbarVisibility.IsNativeTaskbarHiddenByDockyra);
+
+            await vm.SwapWithMicrosoftTaskbarAsync();
+            Assert.False(vm.IsDockyraActive);
+            Assert.False(fakeTaskbarVisibility.IsNativeTaskbarHiddenByDockyra);
+        }
+
+        Assert.False(fakeTaskbarVisibility.IsNativeTaskbarHiddenByDockyra);
+    }
+
+    private sealed class FakeTaskbarVisibilityService : ITaskbarVisibilityService
+    {
+        public bool IsNativeTaskbarAccessible => true;
+        public bool IsNativeTaskbarHiddenByDockyra { get; private set; }
+        public OperationResult EnsureNativeShellAccessible() => OperationResult.Success();
+        public OperationResult SetNativeTaskbarVisible(bool visible)
+        {
+            IsNativeTaskbarHiddenByDockyra = !visible;
+            return OperationResult.Success();
+        }
+        public NativeTaskbarGeometry GetNativeTaskbarGeometry() =>
+            new(true, !IsNativeTaskbarHiddenByDockyra, new WorkAreaRect(0, 1032, 1920, 48), new WorkAreaRect(1700, 1032, 220, 48), new WorkAreaRect(8, 1032, 1680, 48), 1.0);
+        public IReadOnlyList<PinnedTaskbarItem> GetNativePinnedTaskbarItems() =>
+        [
+            new PinnedTaskbarItem("pin-vscode", "Visual Studio Code", @"C:\Apps\VSCode.lnk", "grp-dev"),
+            new PinnedTaskbarItem("pin-chrome", "Google Chrome", @"C:\Apps\Chrome.lnk", "grp-browsers")
+        ];
+        public OperationResult OpenNativeStartMenu() => OperationResult.Success();
+        public OperationResult OpenSystemQuickAction(string actionKey) => OperationResult.Success();
+        public bool IsForegroundWindowFullscreen() => false;
+        public void Dispose() => IsNativeTaskbarHiddenByDockyra = false;
+    }
+
     private sealed class FakeWindowManager : IWindowManager
     {
         public List<WindowId> ActivatedWindows { get; } = [];

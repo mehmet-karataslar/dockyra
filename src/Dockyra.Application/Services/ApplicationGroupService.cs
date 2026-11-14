@@ -1,6 +1,7 @@
 using Dockyra.Application.Interfaces;
 using Dockyra.Contracts.Models;
 using Dockyra.Contracts.Results;
+using Dockyra.Contracts.Services;
 using Dockyra.Domain.Entities;
 using Dockyra.Domain.Enums;
 using Dockyra.Domain.Rules;
@@ -14,15 +15,18 @@ public sealed class ApplicationGroupService : IGroupService, IFolderService
     private readonly IApplicationGroupRepository _groupRepository;
     private readonly SmartGroupingRuleEngine _ruleEngine;
     private readonly ILogger<ApplicationGroupService> _logger;
+    private readonly IApplicationIconProvider? _iconProvider;
 
     public ApplicationGroupService(
         IApplicationGroupRepository groupRepository,
         SmartGroupingRuleEngine ruleEngine,
-        ILogger<ApplicationGroupService> logger)
+        ILogger<ApplicationGroupService> logger,
+        IApplicationIconProvider? iconProvider = null)
     {
         _groupRepository = groupRepository;
         _ruleEngine = ruleEngine;
         _logger = logger;
+        _iconProvider = iconProvider;
     }
 
     public async Task<IReadOnlyList<ApplicationGroup>> GetAllGroupsAsync(CancellationToken cancellationToken = default)
@@ -30,6 +34,7 @@ public sealed class ApplicationGroupService : IGroupService, IFolderService
         IReadOnlyList<ApplicationGroup> groups = await _groupRepository.GetGroupsAsync(cancellationToken).ConfigureAwait(false);
         if (groups.Count > 0)
         {
+            PopulateGroupIcons(groups);
             return groups;
         }
 
@@ -39,7 +44,38 @@ public sealed class ApplicationGroupService : IGroupService, IFolderService
             await _groupRepository.SaveGroupAsync(group, cancellationToken).ConfigureAwait(false);
         }
 
+        PopulateGroupIcons(defaults);
         return defaults;
+    }
+
+    private void PopulateGroupIcons(IEnumerable<ApplicationGroup> groups)
+    {
+        foreach (ApplicationGroup grp in groups)
+        {
+            grp.ColorHex = NormalizeToSoftMatteColor(grp.Id, grp.ColorHex);
+            if (_iconProvider is null)
+            {
+                continue;
+            }
+
+            foreach (ApplicationEntry app in grp.Applications)
+            {
+                app.IconBgra32 ??= _iconProvider.GetIconBgra32(app.ExecutablePath);
+            }
+        }
+    }
+
+    private static string NormalizeToSoftMatteColor(string groupId, string currentHex)
+    {
+        return groupId switch
+        {
+            "grp-pinned" => "#5B7C99",
+            "grp-dev" when currentHex is "#3B82F6" => "#4F7CAC",
+            "grp-browsers" when currentHex is "#10B981" => "#5E8C76",
+            "grp-comm" when currentHex is "#8B5CF6" => "#847996",
+            "grp-system" when currentHex is "#F59E0B" => "#A68A71",
+            _ => currentHex
+        };
     }
 
     public async Task<OperationResult<ApplicationGroup>> CreateGroupAsync(
@@ -80,6 +116,68 @@ public sealed class ApplicationGroupService : IGroupService, IFolderService
         return OperationResult<ApplicationGroup>.Success(group);
     }
 
+    public Task<OperationResult> SaveGroupAsync(
+        ApplicationGroup group,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(group);
+        return _groupRepository.SaveGroupAsync(group, cancellationToken);
+    }
+
+    public Task<OperationResult> DeleteGroupAsync(
+        string groupId,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(groupId))
+        {
+            return Task.FromResult(OperationResult.Failure("GROUP_ID_EMPTY", "Group ID is required.", ErrorCategory.Validation));
+        }
+
+        return _groupRepository.DeleteGroupAsync(groupId, cancellationToken);
+    }
+
+    public async Task<OperationResult> ReorderGroupsAsync(
+        IReadOnlyList<string> orderedGroupIds,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(orderedGroupIds);
+        IReadOnlyList<ApplicationGroup> groups = await GetAllGroupsAsync(cancellationToken).ConfigureAwait(false);
+        Dictionary<string, ApplicationGroup> map = groups.ToDictionary(g => g.Id, StringComparer.Ordinal);
+
+        int order = 0;
+        foreach (string id in orderedGroupIds)
+        {
+            if (map.TryGetValue(id, out ApplicationGroup? group))
+            {
+                group.SortOrder = order++;
+                await _groupRepository.SaveGroupAsync(group, cancellationToken).ConfigureAwait(false);
+            }
+        }
+
+        return OperationResult.Success();
+    }
+
+    public async Task<OperationResult> RemoveApplicationFromGroupAsync(
+        string groupId,
+        string applicationId,
+        CancellationToken cancellationToken = default)
+    {
+        IReadOnlyList<ApplicationGroup> groups = await GetAllGroupsAsync(cancellationToken).ConfigureAwait(false);
+        ApplicationGroup? target = groups.FirstOrDefault(g => string.Equals(g.Id, groupId, StringComparison.Ordinal));
+        if (target is null)
+        {
+            return OperationResult.Failure("GROUP_NOT_FOUND", $"Group '{groupId}' not found.", ErrorCategory.Validation);
+        }
+
+        target.Applications.RemoveAll(a => string.Equals(a.Id, applicationId, StringComparison.Ordinal));
+        for (int i = 0; i < target.Applications.Count; i++)
+        {
+            target.Applications[i].SortOrder = i;
+        }
+
+        return await _groupRepository.SaveGroupAsync(target, cancellationToken).ConfigureAwait(false);
+    }
+
     public async Task<OperationResult> AddApplicationToGroupAsync(
         string groupId,
         ApplicationEntry entry,
@@ -109,6 +207,66 @@ public sealed class ApplicationGroupService : IGroupService, IFolderService
         entry.SortOrder = target.Applications.Count;
         target.Applications.Add(entry);
         return await _groupRepository.SaveGroupAsync(target, cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task SyncNativePinnedAppsAsync(
+        IReadOnlyList<PinnedTaskbarItem> pinnedItems,
+        CancellationToken cancellationToken = default)
+    {
+        if (pinnedItems is null || pinnedItems.Count == 0)
+        {
+            return;
+        }
+
+        List<ApplicationGroup> groups = (await GetAllGroupsAsync(cancellationToken).ConfigureAwait(false)).ToList();
+
+        ApplicationGroup? pinnedGroup = groups.FirstOrDefault(g => string.Equals(g.Id, "grp-pinned", StringComparison.Ordinal));
+        if (pinnedGroup is null)
+        {
+            pinnedGroup = new ApplicationGroup
+            {
+                Id = "grp-pinned",
+                Name = "Sabitlenenler",
+                Icon = "PinGlyph",
+                ColorHex = "#5B7C99",
+                Description = "Mevcut Windows 11 görev çubuğundaki sabitlenmiş uygulamalarınız",
+                SortOrder = -1,
+                ViewMode = FolderViewMode.Grid,
+                Applications = []
+            };
+            groups.Insert(0, pinnedGroup);
+        }
+
+        pinnedGroup.Applications.Clear();
+        int pinOrder = 0;
+        foreach (PinnedTaskbarItem item in pinnedItems)
+        {
+            pinnedGroup.Applications.Add(new ApplicationEntry
+            {
+                Id = item.Id,
+                DisplayName = item.DisplayName,
+                ExecutablePath = item.ShortcutPath,
+                SortOrder = pinOrder++
+            });
+
+            ApplicationGroup? categoryTarget = groups.FirstOrDefault(g => string.Equals(g.Id, item.CategoryGroupId, StringComparison.Ordinal));
+            if (categoryTarget is not null &&
+                !categoryTarget.Applications.Any(a =>
+                    string.Equals(a.DisplayName, item.DisplayName, StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(a.ExecutablePath, item.ShortcutPath, StringComparison.OrdinalIgnoreCase)))
+            {
+                categoryTarget.Applications.Add(new ApplicationEntry
+                {
+                    Id = $"{item.Id}-{categoryTarget.Id}",
+                    DisplayName = item.DisplayName,
+                    ExecutablePath = item.ShortcutPath,
+                    SortOrder = categoryTarget.Applications.Count
+                });
+                await _groupRepository.SaveGroupAsync(categoryTarget, cancellationToken).ConfigureAwait(false);
+            }
+        }
+
+        await _groupRepository.SaveGroupAsync(pinnedGroup, cancellationToken).ConfigureAwait(false);
     }
 
     public string? SuggestGroupForWindow(WindowInfo window)

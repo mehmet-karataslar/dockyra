@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Dockyra.Domain.Enums;
 using Dockyra.Domain.ValueObjects;
 
@@ -12,6 +13,9 @@ public sealed class ApplicationEntry
     public string? ParentFolderId { get; set; }
     public int SortOrder { get; set; }
     public bool IsPinned { get; set; } = true;
+
+    [JsonIgnore]
+    public byte[]? IconBgra32 { get; set; }
 }
 
 public sealed class ApplicationGroup

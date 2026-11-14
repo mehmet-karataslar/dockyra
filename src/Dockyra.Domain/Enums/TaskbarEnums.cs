@@ -43,3 +43,19 @@ public enum ThemeKind
     System = 2
 }
 
+public enum TaskbarIntegrationMode
+{
+    NativeOverlay = 0,
+    FullReplacement = 1
+}
+
+public enum TaskbarIconShape
+{
+    RoundedSquare = 0,
+    Circle = 1,
+    Square = 2,
+    Capsule = 3
+}
+
+
+

@@ -23,6 +23,22 @@ public sealed class TaskbarOrchestrationService : ITaskbarService
     public Task<TaskbarLayout> GetCurrentLayoutAsync(CancellationToken cancellationToken = default) =>
         _layoutRepository.GetLayoutAsync("default-layout", cancellationToken);
 
+    public async Task<OperationResult> SaveLayoutAsync(
+        TaskbarLayout layout,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(layout);
+        if (!TaskbarLayoutValidator.Validate(layout, out IReadOnlyList<string> errors))
+        {
+            return OperationResult.Failure(
+                "INVALID_LAYOUT",
+                string.Join("; ", errors),
+                ErrorCategory.Validation);
+        }
+
+        return await _layoutRepository.SaveLayoutAsync(layout, cancellationToken).ConfigureAwait(false);
+    }
+
     public async Task<OperationResult> UpdateDockEdgeAsync(
         TaskbarDockEdge edge,
         CancellationToken cancellationToken = default)

@@ -5,6 +5,7 @@ using Dockyra.Contracts.Modules;
 using Dockyra.Contracts.Services;
 using Dockyra.Desktop.Bootstrapper;
 using Dockyra.Infrastructure.Persistence;
+using Dockyra.Presentation.Wpf.ViewModels;
 using Dockyra.Presentation.Wpf.Views;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -20,6 +21,7 @@ public partial class App : System.Windows.Application
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
         _instanceMutex = new Mutex(true, SingleInstanceMutexName, out bool createdNew);
         if (!createdNew)
@@ -51,12 +53,20 @@ public partial class App : System.Windows.Application
             var moduleHost = _serviceProvider.GetRequiredService<IModuleHostService>();
             await moduleHost.InitializeModulesAsync(safeModeOnly: enterSafeMode);
 
-            var mainWindow = _serviceProvider.GetRequiredService<TaskbarWindow>();
-            MainWindow = mainWindow;
-            mainWindow.Show();
+            // Initialize TaskbarViewModel and TaskbarWindow in background (ready to swap when user clicks button in Studio)
+            var taskbarVm = _serviceProvider.GetRequiredService<TaskbarViewModel>();
+            await taskbarVm.InitializeAsync();
+            var taskbarWindow = _serviceProvider.GetRequiredService<TaskbarWindow>();
+
+            // Open Dockyra Personalization & Management Studio first as requested by user
+            var studioWindow = _serviceProvider.GetRequiredService<SettingsWindow>();
+            MainWindow = studioWindow;
+            WireStudioWindowLifecycle(studioWindow, taskbarWindow, taskbarVm);
+            studioWindow.Show();
+            studioWindow.Activate();
 
             safeModeCoordinator.MarkStartupHealthy();
-            logger.LogInformation("Dockyra started cleanly (SafeMode={SafeMode})", enterSafeMode);
+            logger.LogInformation("Dockyra Personalization Studio started cleanly (SafeMode={SafeMode})", enterSafeMode);
         }
         catch (Exception ex)
         {
@@ -65,10 +75,29 @@ public partial class App : System.Windows.Application
         }
     }
 
+    private void WireStudioWindowLifecycle(
+        SettingsWindow studioWindow,
+        TaskbarWindow taskbarWindow,
+        TaskbarViewModel taskbarVm)
+    {
+        studioWindow.Closed += (_, _) =>
+        {
+            // If the user closed the Studio window and Dockyra taskbar is NOT active, exit the app cleanly.
+            // If Dockyra taskbar IS active, keep running in the taskbar until the user closes or switches back.
+            if (!taskbarVm.IsDockyraActive || !taskbarWindow.IsVisible)
+            {
+                _serviceProvider?.GetService<ITaskbarVisibilityService>()?.SetNativeTaskbarVisible(true);
+                Shutdown(0);
+            }
+        };
+    }
+
     protected override async void OnExit(ExitEventArgs e)
     {
         if (_serviceProvider is not null)
         {
+            _serviceProvider.GetService<ITaskbarVisibilityService>()?.SetNativeTaskbarVisible(true);
+
             var moduleHost = _serviceProvider.GetService<IModuleHostService>();
             if (moduleHost is not null)
             {
@@ -102,4 +131,3 @@ public partial class App : System.Windows.Application
         e.SetObserved();
     }
 }
-

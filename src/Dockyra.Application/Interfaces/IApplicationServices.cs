@@ -8,6 +8,7 @@ namespace Dockyra.Application.Interfaces;
 public interface ITaskbarService
 {
     Task<TaskbarLayout> GetCurrentLayoutAsync(CancellationToken cancellationToken = default);
+    Task<OperationResult> SaveLayoutAsync(TaskbarLayout layout, CancellationToken cancellationToken = default);
     Task<OperationResult> UpdateDockEdgeAsync(TaskbarDockEdge edge, CancellationToken cancellationToken = default);
     Task<OperationResult> ResetToDefaultLayoutAsync(CancellationToken cancellationToken = default);
 }
@@ -20,9 +21,25 @@ public interface IGroupService
         string colorHex,
         string icon,
         CancellationToken cancellationToken = default);
+    Task<OperationResult> SaveGroupAsync(
+        ApplicationGroup group,
+        CancellationToken cancellationToken = default);
+    Task<OperationResult> DeleteGroupAsync(
+        string groupId,
+        CancellationToken cancellationToken = default);
+    Task<OperationResult> ReorderGroupsAsync(
+        IReadOnlyList<string> orderedGroupIds,
+        CancellationToken cancellationToken = default);
     Task<OperationResult> AddApplicationToGroupAsync(
         string groupId,
         ApplicationEntry entry,
+        CancellationToken cancellationToken = default);
+    Task<OperationResult> RemoveApplicationFromGroupAsync(
+        string groupId,
+        string applicationId,
+        CancellationToken cancellationToken = default);
+    Task SyncNativePinnedAppsAsync(
+        IReadOnlyList<PinnedTaskbarItem> pinnedItems,
         CancellationToken cancellationToken = default);
     string? SuggestGroupForWindow(WindowInfo window);
 }

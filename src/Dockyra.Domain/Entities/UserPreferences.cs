@@ -12,5 +12,14 @@ public sealed class UserPreferences
     public bool LaunchAtWindowsStartup { get; set; }
     public bool EnableAnimations { get; set; } = true;
     public bool FirstRunCompleted { get; set; }
+    public TaskbarIntegrationMode IntegrationMode { get; set; } = TaskbarIntegrationMode.NativeOverlay;
+    public string AccentColorHex { get; set; } = "#3B82F6";
+    public string SurfaceColorHex { get; set; } = "#EA18181B";
+    public bool ShowStartButton { get; set; } = true;
+    public bool ShowOpenWindows { get; set; } = true;
+    public bool ShowClock { get; set; } = true;
+    public bool ShowPowerBadge { get; set; } = true;
+    public TaskbarIconShape IconShape { get; set; } = TaskbarIconShape.RoundedSquare;
+    public int BarWidthPercent { get; set; } = 100;
 }
 

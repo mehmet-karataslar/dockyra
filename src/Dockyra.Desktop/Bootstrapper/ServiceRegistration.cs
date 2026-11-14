@@ -56,7 +56,8 @@ public static class ServiceRegistration
         services.AddSingleton<ISettingsBackupService, JsonSettingsBackupService>();
         services.AddSingleton<ISafeModeStateStore>(_ => new FileSafeModeStateStore(safeModeFilePath));
 
-        // WindowsIntegration (Win32, DWM, Monitor, Power, Process Launch, Shell Coexistence)
+        // WindowsIntegration (Win32, DWM, Monitor, Power, Process Launch, Shell Coexistence, Icons)
+        services.AddSingleton<IApplicationIconProvider, Win32IconExtractor>();
         services.AddSingleton<IWindowManager, Win32WindowManager>();
         services.AddSingleton<IMonitorService, Win32MonitorService>();
         services.AddSingleton<IPowerMonitor, Win32PowerMonitor>();

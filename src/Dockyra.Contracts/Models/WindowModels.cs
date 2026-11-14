@@ -23,7 +23,8 @@ public sealed record WindowInfo(
     string? ExecutablePath,
     int ProcessId,
     bool IsActive,
-    WindowStateKind State);
+    WindowStateKind State,
+    byte[]? IconBgra32 = null);
 
 public sealed class WindowsChangedEventArgs : EventArgs
 {

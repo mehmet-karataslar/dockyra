@@ -14,3 +14,12 @@ public sealed record MonitorInfo(
     WorkAreaRect WorkArea,
     double ScaleFactor);
 
+public sealed record NativeTaskbarGeometry(
+    bool IsNativeTaskbarFound,
+    bool IsNativeTaskbarVisible,
+    WorkAreaRect TaskbarBounds,
+    WorkAreaRect SystemTrayBounds,
+    WorkAreaRect OverlayDockBounds,
+    double ScaleFactor);
+
+

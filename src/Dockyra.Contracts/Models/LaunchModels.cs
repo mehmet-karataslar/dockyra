@@ -15,3 +15,11 @@ public sealed record LaunchResult(
     public static LaunchResult Failed(string code, string message) => new(false, null, code, message);
 }
 
+public sealed record PinnedTaskbarItem(
+    string Id,
+    string DisplayName,
+    string ShortcutPath,
+    string CategoryGroupId,
+    byte[]? IconBgra32 = null);
+
+

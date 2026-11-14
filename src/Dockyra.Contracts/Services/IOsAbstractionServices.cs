@@ -35,9 +35,21 @@ public interface IApplicationLauncher
     Task<LaunchResult> LaunchAsync(ApplicationLaunchRequest request, CancellationToken cancellationToken = default);
 }
 
-public interface ITaskbarVisibilityService
+public interface IApplicationIconProvider
+{
+    byte[]? GetIconBgra32(string? fileOrShortcutPath);
+}
+
+public interface ITaskbarVisibilityService : IDisposable
 {
     bool IsNativeTaskbarAccessible { get; }
+    bool IsNativeTaskbarHiddenByDockyra { get; }
     OperationResult EnsureNativeShellAccessible();
+    OperationResult SetNativeTaskbarVisible(bool visible);
+    NativeTaskbarGeometry GetNativeTaskbarGeometry();
+    IReadOnlyList<PinnedTaskbarItem> GetNativePinnedTaskbarItems();
+    OperationResult OpenNativeStartMenu();
+    OperationResult OpenSystemQuickAction(string actionKey);
+    bool IsForegroundWindowFullscreen();
 }
 

@@ -210,7 +210,7 @@ public sealed class Win32WindowManager : IWindowManager
             }
 
             string processName = "unknown";
-            string? executablePath = null;
+            string? executablePath = TryGetProcessExecutablePath(pid);
             try
             {
                 using var proc = Process.GetProcessById((int)pid);
@@ -220,6 +220,10 @@ public sealed class Win32WindowManager : IWindowManager
             {
                 // Process may have exited or restricted access (UIPI).
             }
+
+            byte[]? iconBytes = !string.IsNullOrWhiteSpace(executablePath)
+                ? Shell.Win32IconExtractor.ExtractNativeBgra32(executablePath)
+                : null;
 
             WindowStateKind state = Win32NativeMethods.IsIconic(hWnd)
                 ? WindowStateKind.Minimized
@@ -234,12 +238,42 @@ public sealed class Win32WindowManager : IWindowManager
                 executablePath,
                 (int)pid,
                 IsActive: hWnd == foregroundWindow,
-                State: state));
+                State: state,
+                IconBgra32: iconBytes));
 
             return true;
         }, IntPtr.Zero);
 
         return results;
+    }
+
+    private static string? TryGetProcessExecutablePath(uint pid)
+    {
+        IntPtr hProcess = Win32NativeMethods.OpenProcess(Win32NativeMethods.PROCESS_QUERY_LIMITED_INFORMATION, false, pid);
+        if (hProcess == IntPtr.Zero)
+        {
+            return null;
+        }
+
+        try
+        {
+            uint capacity = 1024;
+            var sb = new StringBuilder((int)capacity);
+            if (Win32NativeMethods.QueryFullProcessImageNameW(hProcess, 0, sb, ref capacity) && capacity > 0)
+            {
+                return sb.ToString();
+            }
+        }
+        catch
+        {
+            // Ignore access errors
+        }
+        finally
+        {
+            Win32NativeMethods.CloseHandle(hProcess);
+        }
+
+        return null;
     }
 
     private static bool IsWindowCloaked(IntPtr hWnd)

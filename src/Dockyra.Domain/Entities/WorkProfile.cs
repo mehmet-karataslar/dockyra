@@ -20,7 +20,7 @@ public sealed class WorkProfile
             LayoutId = "default-layout",
             IsDefault = true,
             SortOrder = 0,
-            EnabledGroupIds = ["grp-dev", "grp-browsers", "grp-comm"]
+            EnabledGroupIds = ["grp-pinned", "grp-dev", "grp-browsers", "grp-comm"]
         },
         new WorkProfile
         {
@@ -30,7 +30,7 @@ public sealed class WorkProfile
             LayoutId = "default-layout",
             IsDefault = false,
             SortOrder = 1,
-            EnabledGroupIds = ["grp-browsers", "grp-comm", "grp-system"]
+            EnabledGroupIds = ["grp-pinned", "grp-browsers", "grp-comm", "grp-system"]
         },
         new WorkProfile
         {
@@ -40,7 +40,7 @@ public sealed class WorkProfile
             LayoutId = "default-layout",
             IsDefault = false,
             SortOrder = 2,
-            EnabledGroupIds = ["grp-comm", "grp-system"]
+            EnabledGroupIds = ["grp-pinned", "grp-comm", "grp-system"]
         }
     ];
 }
