@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>Dockyra.ArchitectureTests</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Dockyra.Domain\Dockyra.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Dockyra.Contracts\Dockyra.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\Dockyra.Application\Dockyra.Application.csproj" />
+    <ProjectReference Include="..\..\src\Dockyra.Infrastructure\Dockyra.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Dockyra.WindowsIntegration\Dockyra.WindowsIntegration.csproj" />
+    <ProjectReference Include="..\..\src\Dockyra.Modules\Dockyra.Modules.csproj" />
+    <ProjectReference Include="..\..\src\Dockyra.Presentation.Wpf\Dockyra.Presentation.Wpf.csproj" />
+    <ProjectReference Include="..\..\src\Dockyra.Desktop\Dockyra.Desktop.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+</Project>
+

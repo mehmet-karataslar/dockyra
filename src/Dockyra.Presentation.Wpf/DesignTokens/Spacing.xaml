@@ -1,0 +1,13 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime">
+  <Thickness x:Key="Token.Spacing.XS">4</Thickness>
+  <Thickness x:Key="Token.Spacing.SM">8</Thickness>
+  <Thickness x:Key="Token.Spacing.MD">12</Thickness>
+  <Thickness x:Key="Token.Spacing.LG">16</Thickness>
+  <Thickness x:Key="Token.Spacing.BarPadding">12,6,12,6</Thickness>
+  <Thickness x:Key="Token.Spacing.PillPadding">10,5,10,5</Thickness>
+  <sys:Double x:Key="Token.IconSize.Default">36</sys:Double>
+  <sys:Double x:Key="Token.ControlSize.BarHeight">52</sys:Double>
+</ResourceDictionary>
+

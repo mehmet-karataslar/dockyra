@@ -1,0 +1,7 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <CornerRadius x:Key="Token.Radius.SM">6</CornerRadius>
+  <CornerRadius x:Key="Token.Radius.MD">10</CornerRadius>
+  <CornerRadius x:Key="Token.Radius.LG">14</CornerRadius>
+</ResourceDictionary>
+

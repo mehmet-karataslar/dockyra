@@ -81,3 +81,4 @@ dotnet run --project src/Dockyra.Desktop/Dockyra.Desktop.csproj
 - **Development Roadmap**: [ROADMAP.md](ROADMAP.md) / [planning/ROADMAP.md](planning/ROADMAP.md)
 - **Task Tracking**: [TASKS.md](TASKS.md) / [planning/tasks/README.md](planning/tasks/README.md)
 - **Changelog**: [CHANGELOG.md](CHANGELOG.md)
+

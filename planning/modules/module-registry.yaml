@@ -1,0 +1,324 @@
+version: 1
+project: Dockyra
+modules:
+  - id: MOD-CORE
+    name: Core Foundation & Module Host
+    status: active
+    purpose: >
+      Provides the Clean Architecture contracts, fault-isolated module host,
+      Safe Mode startup recovery coordinator, and Dependency Injection composition root.
+    source_paths:
+      - src/Dockyra.Contracts/
+      - src/Dockyra.Modules/
+      - src/Dockyra.Desktop/Bootstrapper/
+    dependencies: []
+    contracts:
+      - IModule
+      - IModuleHostService
+      - ISafeModeStateStore
+    models:
+      - OperationResult
+      - ErrorInfo
+    tests:
+      - tests/ArchitectureTests/
+      - tests/IntegrationTests/
+    planning_docs:
+      - planning/architecture/system-overview.md
+      - planning/architecture/module-boundaries.md
+    owners:
+      - architect
+      - backend-developer
+    related_tasks:
+      - TASK-0001
+      - TASK-0002
+      - TASK-0003
+
+  - id: MOD-TASKBAR
+    name: Taskbar Shell & Layout
+    status: in-progress
+    purpose: >
+      Manages taskbar dock edge, section partitioning (Left, Center, Right),
+      sizing, alignment, lock state, multi-monitor placement, and main bar UI.
+    source_paths:
+      - src/Dockyra.Domain/Entities/TaskbarLayout.cs
+      - src/Dockyra.Application/Services/TaskbarOrchestrationService.cs
+      - src/Dockyra.Modules/Taskbar/
+      - src/Dockyra.Presentation.Wpf/ViewModels/TaskbarViewModel.cs
+      - src/Dockyra.Presentation.Wpf/Views/TaskbarWindow.xaml
+    dependencies:
+      - MOD-CORE
+      - MOD-WINDOWS
+      - MOD-GROUPS
+      - MOD-PROFILES
+      - MOD-THEMES
+    contracts:
+      - ITaskbarService
+      - ITaskbarLayoutRepository
+      - IMonitorService
+      - ITaskbarVisibilityService
+    models:
+      - TaskbarLayout
+      - TaskbarSection
+      - MonitorInfo
+    tests:
+      - tests/UnitTests/
+      - tests/UITests/
+    planning_docs:
+      - planning/modules/taskbar.md
+      - planning/phases/phase-02-taskbar.md
+    owners:
+      - wpf-developer
+      - backend-developer
+    related_tasks:
+      - TASK-0007
+      - TASK-0010
+
+  - id: MOD-GROUPS
+    name: Application Groups
+    status: in-progress
+    purpose: >
+      Organizes user applications into named, color-coded, icon-labeled groups
+      and applies deterministic smart auto-classification rules.
+    source_paths:
+      - src/Dockyra.Domain/Entities/ApplicationGroup.cs
+      - src/Dockyra.Domain/Rules/SmartGroupingRuleEngine.cs
+      - src/Dockyra.Application/Services/ApplicationGroupService.cs
+      - src/Dockyra.Modules/Groups/
+    dependencies:
+      - MOD-CORE
+      - MOD-SETTINGS
+    contracts:
+      - IGroupService
+      - IApplicationGroupRepository
+    models:
+      - ApplicationGroup
+      - ApplicationEntry
+      - ClassificationRule
+    tests:
+      - tests/UnitTests/
+      - tests/IntegrationTests/
+    planning_docs:
+      - planning/modules/groups.md
+      - planning/phases/phase-03-groups.md
+    owners:
+      - backend-developer
+      - wpf-developer
+    related_tasks:
+      - TASK-0004
+      - TASK-0008
+
+  - id: MOD-FOLDERS
+    name: Folder Flyouts & Hierarchy
+    status: in-progress
+    purpose: >
+      Provides expandable flyout panels for application groups with grid/list modes,
+      instant search filtering, and bounded nested subfolder hierarchy.
+    source_paths:
+      - src/Dockyra.Domain/Entities/FolderItem.cs
+      - src/Dockyra.Domain/Rules/FolderHierarchyRules.cs
+      - src/Dockyra.Modules/Folders/
+      - src/Dockyra.Presentation.Wpf/ViewModels/FolderPopupViewModel.cs
+      - src/Dockyra.Presentation.Wpf/Views/FolderFlyoutControl.xaml
+    dependencies:
+      - MOD-GROUPS
+      - MOD-THEMES
+    contracts:
+      - IFolderService
+      - IApplicationLauncher
+    models:
+      - FolderItem
+      - FolderViewMode
+    tests:
+      - tests/UnitTests/
+      - tests/UITests/
+    planning_docs:
+      - planning/modules/folders.md
+      - planning/phases/phase-03-groups.md
+    owners:
+      - wpf-developer
+      - backend-developer
+    related_tasks:
+      - TASK-0004
+      - TASK-0008
+
+  - id: MOD-WINDOWS
+    name: Open Window Tracking & Management
+    status: in-progress
+    purpose: >
+      Detects visible desktop windows via Win32 and DWM APIs, tracks foreground focus
+      via SetWinEventHook, and executes window activation, minimize, restore, and close.
+    source_paths:
+      - src/Dockyra.Application/UseCases/WindowSwitchUseCase.cs
+      - src/Dockyra.WindowsIntegration/WindowTracking/Win32WindowManager.cs
+      - src/Dockyra.Modules/Windows/
+    dependencies:
+      - MOD-CORE
+      - MOD-PERFORMANCE
+    contracts:
+      - IWindowManager
+      - IWindowSwitchUseCase
+    models:
+      - WindowId
+      - WindowInfo
+      - WindowStateKind
+    tests:
+      - tests/UnitTests/
+      - tests/IntegrationTests/
+    planning_docs:
+      - planning/modules/windows.md
+      - planning/architecture/windows-integration.md
+    owners:
+      - windows-specialist
+      - backend-developer
+    related_tasks:
+      - TASK-0006
+      - TASK-0007
+
+  - id: MOD-PROFILES
+    name: Work Profiles & Context Switching
+    status: in-progress
+    purpose: >
+      Allows saving, switching, exporting, and importing distinct taskbar layouts
+      for different workflows (Development, Daily Use, Gaming).
+    source_paths:
+      - src/Dockyra.Domain/Entities/WorkProfile.cs
+      - src/Dockyra.Application/Services/ProfileManagementService.cs
+      - src/Dockyra.Modules/Profiles/
+    dependencies:
+      - MOD-TASKBAR
+      - MOD-SETTINGS
+    contracts:
+      - IProfileService
+      - IProfileRepository
+    models:
+      - WorkProfile
+    tests:
+      - tests/UnitTests/
+      - tests/IntegrationTests/
+    planning_docs:
+      - planning/modules/profiles.md
+    owners:
+      - backend-developer
+      - wpf-developer
+    related_tasks:
+      - TASK-0005
+      - TASK-0007
+
+  - id: MOD-THEMES
+    name: Fluent Design Tokens, Themes & Localization
+    status: in-progress
+    purpose: >
+      Centralizes Windows 11 Fluent design tokens (colors, typography, spacing, radius),
+      Dark/Light themes, and Turkish/English localization dictionaries.
+    source_paths:
+      - src/Dockyra.Modules/Themes/
+      - src/Dockyra.Presentation.Wpf/DesignTokens/
+      - src/Dockyra.Presentation.Wpf/Localization/
+    dependencies:
+      - MOD-CORE
+    contracts:
+      - IThemeService
+      - ILocalizationService
+    models:
+      - HexColor
+      - ThemeKind
+    tests:
+      - tests/UITests/
+    planning_docs:
+      - planning/modules/themes.md
+      - planning/phases/phase-04-ui.md
+    owners:
+      - wpf-developer
+    related_tasks:
+      - TASK-0007
+      - TASK-0009
+
+  - id: MOD-SETTINGS
+    name: Settings, SQLite Persistence & Backup
+    status: in-progress
+    purpose: >
+      Manages user preferences, SQLite database schema migrations, repositories,
+      and schema-versioned JSON configuration export/import.
+    source_paths:
+      - src/Dockyra.Domain/Entities/UserPreferences.cs
+      - src/Dockyra.Infrastructure/Persistence/
+      - src/Dockyra.Infrastructure/Backup/
+      - src/Dockyra.Modules/Settings/
+      - src/Dockyra.Presentation.Wpf/Views/SettingsWindow.xaml
+    dependencies:
+      - MOD-CORE
+    contracts:
+      - IUserSettingsRepository
+      - ISettingsBackupService
+    models:
+      - UserPreferences
+      - SettingsBackupPackage
+    tests:
+      - tests/IntegrationTests/
+    planning_docs:
+      - planning/modules/settings.md
+      - planning/architecture/database-design.md
+    owners:
+      - backend-developer
+      - wpf-developer
+    related_tasks:
+      - TASK-0005
+      - TASK-0009
+
+  - id: MOD-PERFORMANCE
+    name: Performance & Event Coalescing
+    status: in-progress
+    purpose: >
+      Provides high-throughput event coalescing/debouncing and resource diagnostics
+      to keep idle CPU below 0.5% and RAM below 150 MB.
+    source_paths:
+      - src/Dockyra.Application/Services/EventCoalescer.cs
+      - src/Dockyra.Modules/Performance/
+    dependencies:
+      - MOD-CORE
+    contracts:
+      - IEventCoalescer
+    models:
+      - PerformanceMetricsSnapshot
+    tests:
+      - tests/PerformanceTests/
+    planning_docs:
+      - planning/modules/performance.md
+      - planning/quality/performance-budget.md
+    owners:
+      - performance-engineer
+    related_tasks:
+      - TASK-0006
+      - TASK-0011
+
+  - id: MOD-POWER
+    name: Adaptive Power Management
+    status: in-progress
+    purpose: >
+      Monitors Windows AC/Battery and Energy Saver states and coordinates PowerSaver,
+      Balanced, and Performance operating modes.
+    source_paths:
+      - src/Dockyra.Application/Services/PowerModeCoordinator.cs
+      - src/Dockyra.WindowsIntegration/PowerManagement/Win32PowerMonitor.cs
+      - src/Dockyra.Modules/PowerManagement/
+    dependencies:
+      - MOD-CORE
+      - MOD-PERFORMANCE
+    contracts:
+      - IPowerMonitor
+      - IPowerManagementService
+    models:
+      - PowerState
+      - PowerMode
+    tests:
+      - tests/UnitTests/
+      - tests/IntegrationTests/
+    planning_docs:
+      - planning/modules/power-management.md
+    owners:
+      - windows-specialist
+      - performance-engineer
+    related_tasks:
+      - TASK-0006
+      - TASK-0011
+

@@ -1,0 +1,33 @@
+name: Dockyra CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Validate Planning & Agent Documentation
+        shell: pwsh
+        run: ./scripts/validate-planning.ps1
+
+      - name: Restore dependencies
+        run: dotnet restore Dockyra.sln
+
+      - name: Build solution
+        run: dotnet build Dockyra.sln --configuration Release --no-restore
+
+      - name: Run Automated Test Suites (Architecture, Unit, Integration, UI, Performance)
+        run: dotnet test Dockyra.sln --configuration Release --no-build --verbosity normal
+

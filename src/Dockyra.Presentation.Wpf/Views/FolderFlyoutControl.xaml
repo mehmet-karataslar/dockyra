@@ -1,0 +1,52 @@
+<UserControl x:Class="Dockyra.Presentation.Wpf.Views.FolderFlyoutControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <Border Background="{DynamicResource Theme.Brush.Surface}"
+          BorderBrush="{DynamicResource Theme.Brush.Border}"
+          BorderThickness="1"
+          CornerRadius="{DynamicResource Token.Radius.LG}"
+          Padding="{DynamicResource Token.Spacing.MD}"
+          Width="360">
+    <StackPanel>
+      <DockPanel Margin="0,0,0,8">
+        <TextBlock Text="{Binding GroupTitle}"
+                   Foreground="{DynamicResource Theme.Brush.TextPrimary}"
+                   FontSize="{DynamicResource Token.FontSize.Subtitle}"
+                   FontWeight="SemiBold"
+                   VerticalAlignment="Center" />
+        <Button Content="{DynamicResource Loc.Folder.ToggleView}"
+                Command="{Binding ToggleViewModeCommand}"
+                HorizontalAlignment="Right"
+                Padding="8,4" />
+      </DockPanel>
+
+      <TextBox Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}"
+               Margin="0,0,0,8"
+               Padding="8,5"
+               AutomationProperties.Name="{DynamicResource Loc.Folder.SearchPlaceholder}" />
+
+      <ItemsControl ItemsSource="{Binding FilteredApplications}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <Button Command="{Binding DataContext.LaunchApplicationCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                    CommandParameter="{Binding}"
+                    Margin="0,2"
+                    Padding="8,6"
+                    HorizontalContentAlignment="Left">
+              <StackPanel Orientation="Horizontal">
+                <TextBlock Text="▶ " Foreground="{DynamicResource Token.Brush.Accent}" />
+                <TextBlock Text="{Binding DisplayName}" FontWeight="Medium" />
+              </StackPanel>
+            </Button>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+      <TextBlock Text="{Binding StatusMessage}"
+                 Foreground="{DynamicResource Theme.Brush.TextSecondary}"
+                 FontSize="{DynamicResource Token.FontSize.Caption}"
+                 Margin="0,6,0,0" />
+    </StackPanel>
+  </Border>
+</UserControl>
+

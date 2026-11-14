@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>Dockyra.PerformanceTests</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Dockyra.Domain\Dockyra.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Dockyra.Contracts\Dockyra.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\Dockyra.Application\Dockyra.Application.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+</Project>
+

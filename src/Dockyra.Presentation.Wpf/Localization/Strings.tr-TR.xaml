@@ -1,0 +1,17 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime">
+  <sys:String x:Key="Loc.App.Title">Dockyra Görev Çubuğu</sys:String>
+  <sys:String x:Key="Loc.Section.Groups">Gruplar</sys:String>
+  <sys:String x:Key="Loc.Section.OpenWindows">Açık Pencereler</sys:String>
+  <sys:String x:Key="Loc.Section.System">Sistem &amp; Güç</sys:String>
+  <sys:String x:Key="Loc.Folder.SearchPlaceholder">Klasör içinde uygulama ara...</sys:String>
+  <sys:String x:Key="Loc.Folder.ToggleView">Izgara / Liste Görünümü</sys:String>
+  <sys:String x:Key="Loc.Action.RefreshWindows">Pencereleri Yenile</sys:String>
+  <sys:String x:Key="Loc.Action.OpenSettings">Ayarlar</sys:String>
+  <sys:String x:Key="Loc.Action.CyclePowerMode">Güç Modu</sys:String>
+  <sys:String x:Key="Loc.Settings.Title">Dockyra Ayarları</sys:String>
+  <sys:String x:Key="Loc.Settings.ResetLayout">Düzeni Sıfırla</sys:String>
+  <sys:String x:Key="Loc.Settings.ExportBackup">JSON Yedek Dışa Aktar</sys:String>
+</ResourceDictionary>
+

@@ -24,3 +24,4 @@ BenchmarkDotNet.Artifacts/
 *.snupkg
 publish/
 artifacts/
+

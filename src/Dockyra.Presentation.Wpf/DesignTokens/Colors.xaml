@@ -1,0 +1,15 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <Color x:Key="Token.Color.Accent.Primary">#3B82F6</Color>
+  <Color x:Key="Token.Color.Accent.Hover">#60A5FA</Color>
+  <Color x:Key="Token.Color.Success">#10B981</Color>
+  <Color x:Key="Token.Color.Warning">#F59E0B</Color>
+  <Color x:Key="Token.Color.Danger">#EF4444</Color>
+
+  <SolidColorBrush x:Key="Token.Brush.Accent" Color="{StaticResource Token.Color.Accent.Primary}" />
+  <SolidColorBrush x:Key="Token.Brush.AccentHover" Color="{StaticResource Token.Color.Accent.Hover}" />
+  <SolidColorBrush x:Key="Token.Brush.Success" Color="{StaticResource Token.Color.Success}" />
+  <SolidColorBrush x:Key="Token.Brush.Warning" Color="{StaticResource Token.Color.Warning}" />
+  <SolidColorBrush x:Key="Token.Brush.Danger" Color="{StaticResource Token.Color.Danger}" />
+</ResourceDictionary>
+

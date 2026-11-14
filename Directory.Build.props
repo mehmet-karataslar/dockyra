@@ -1,0 +1,15 @@
+<Project>
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <NoWarn>$(NoWarn);NU1903</NoWarn>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <Deterministic>true</Deterministic>
+    <Authors>Dockyra Engineering</Authors>
+    <Product>Dockyra</Product>
+    <Company>Dockyra</Company>
+    <Version>0.1.0</Version>
+  </PropertyGroup>
+</Project>
+

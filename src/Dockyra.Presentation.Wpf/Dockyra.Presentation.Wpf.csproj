@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>Dockyra.Presentation.Wpf</RootNamespace>
+    <AssemblyName>Dockyra.Presentation.Wpf</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Dockyra.Application\Dockyra.Application.csproj" />
+    <ProjectReference Include="..\Dockyra.Domain\Dockyra.Domain.csproj" />
+    <ProjectReference Include="..\Dockyra.Contracts\Dockyra.Contracts.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+  </ItemGroup>
+</Project>
+
