@@ -69,4 +69,12 @@
   <sys:String x:Key="Loc.Action.FullTaskbar">🚀 Apply as Full Taskbar</sys:String>
   <sys:String x:Key="Loc.Action.OverlayTaskbar">🔗 Dock onto Existing Bar</sys:String>
   <sys:String x:Key="Loc.Action.RestoreMicrosoft">⏪ Restore Microsoft Taskbar</sys:String>
+
+  <!-- Right-Click Taskbar Context Menu -->
+  <sys:String x:Key="Loc.Context.SwitchOrRestore">🪟 Bring Window to Front / Restore</sys:String>
+  <sys:String x:Key="Loc.Context.NewWindow">🚀 Launch App / Open New Window</sys:String>
+  <sys:String x:Key="Loc.Context.MinimizeWindow">🗕 Minimize Window</sys:String>
+  <sys:String x:Key="Loc.Context.CloseWindow">✕ Close Window</sys:String>
+  <sys:String x:Key="Loc.Context.EndTask">⚡ End Task (Force Quit)</sys:String>
+  <sys:String x:Key="Loc.Context.RemoveFromFolder">📤 Remove from Box</sys:String>
 </ResourceDictionary>

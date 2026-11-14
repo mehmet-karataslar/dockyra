@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:conv="clr-namespace:Dockyra.Presentation.Wpf.Converters">
   <UserControl.Resources>
+    <BooleanToVisibilityConverter x:Key="BoolToVis" />
     <conv:Bgra32ToImageSourceConverter x:Key="IconConverter" />
     <conv:BytesPresenceToVisibilityConverter x:Key="BytesVisConverter" />
     <conv:HexToBrushConverter x:Key="HexBrush" />
@@ -14,7 +15,7 @@
           CornerRadius="18"
           Padding="14"
           Margin="0,0,0,8"
-          Width="360">
+          Width="372">
     <StackPanel>
       <!-- Android Folder Header (Editable Title + Delete Folder + Close) -->
       <Border Background="{Binding GroupColorHex, Converter={StaticResource HexBrush}, ConverterParameter=45}"
@@ -53,7 +54,7 @@
         </DockPanel>
       </Border>
 
-      <!-- App Icons Grid Inside Folder (Android-style 3-column mini box) -->
+      <!-- App Icons Grid Inside Folder (Android-style 3-column mini box with Running Indicators & Right-Click Menu!) -->
       <ScrollViewer MaxHeight="290"
                     VerticalScrollBarVisibility="Auto"
                     HorizontalScrollBarVisibility="Disabled">
@@ -65,13 +66,42 @@
           </ItemsControl.ItemsPanel>
           <ItemsControl.ItemTemplate>
             <DataTemplate>
-              <Grid Width="98" Height="88" Margin="4">
+              <Grid Width="104" Height="94" Margin="4">
                 <Button Command="{Binding DataContext.LaunchApplicationCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                         CommandParameter="{Binding}"
+                        Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=UserControl}}"
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Stretch"
                         Padding="6,6"
                         ToolTip="{Binding DisplayName}">
+                  <Button.ContextMenu>
+                    <ContextMenu Background="{DynamicResource Theme.Brush.Surface}"
+                                 BorderBrush="{DynamicResource Token.Brush.Accent}"
+                                 BorderThickness="1.5"
+                                 Foreground="{DynamicResource Theme.Brush.TextPrimary}"
+                                 Padding="4">
+                      <MenuItem Header="{Binding DisplayName}" FontWeight="Bold" IsEnabled="False" />
+                      <Separator />
+                      <MenuItem Header="{DynamicResource Loc.Context.NewWindow}"
+                                Command="{Binding PlacementTarget.Tag.LaunchApplicationCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                CommandParameter="{Binding}" />
+                      <MenuItem Header="{DynamicResource Loc.Context.CloseWindow}"
+                                Command="{Binding PlacementTarget.Tag.CloseFolderAppWindowCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                CommandParameter="{Binding}"
+                                Visibility="{Binding IsRunning, Converter={StaticResource BoolToVis}}" />
+                      <MenuItem Header="{DynamicResource Loc.Context.EndTask}"
+                                Command="{Binding PlacementTarget.Tag.EndFolderAppTaskCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                CommandParameter="{Binding}"
+                                Foreground="#F87171"
+                                FontWeight="Bold"
+                                Visibility="{Binding IsRunning, Converter={StaticResource BoolToVis}}" />
+                      <Separator />
+                      <MenuItem Header="{DynamicResource Loc.Context.RemoveFromFolder}"
+                                Command="{Binding PlacementTarget.Tag.RemoveApplicationFromFolderCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                CommandParameter="{Binding}" />
+                    </ContextMenu>
+                  </Button.ContextMenu>
+
                   <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                     <Grid Width="32" Height="32" HorizontalAlignment="Center" Margin="0,0,0,5">
                       <Image Source="{Binding IconBgra32, Converter={StaticResource IconConverter}}"
@@ -90,7 +120,15 @@
                                FontWeight="SemiBold"
                                TextAlignment="Center"
                                TextTrimming="CharacterEllipsis"
-                               MaxWidth="84" />
+                               MaxWidth="88" />
+                    <!-- Running Indicator inside the Folder Box -->
+                    <Border Width="18"
+                            Height="3"
+                            CornerRadius="1.5"
+                            Background="{DynamicResource Token.Brush.Accent}"
+                            Margin="0,3,0,0"
+                            HorizontalAlignment="Center"
+                            Visibility="{Binding IsRunning, Converter={StaticResource BoolToVis}}" />
                   </StackPanel>
                 </Button>
 
@@ -105,18 +143,12 @@
                         FontSize="9"
                         Background="#66000000"
                         BorderThickness="0"
-                        ToolTip="Kutudan çıkar" />
+                        ToolTip="{DynamicResource Loc.Context.RemoveFromFolder}" />
               </Grid>
             </DataTemplate>
           </ItemsControl.ItemTemplate>
         </ItemsControl>
       </ScrollViewer>
-
-      <TextBlock Text="💡 İpucu: Başka bir ikonu bu kutunun üstüne sürükleyip bırakarak ekleyebilirsiniz."
-                 Foreground="{DynamicResource Theme.Brush.TextSecondary}"
-                 FontSize="10.5"
-                 TextWrapping="Wrap"
-                 Margin="4,8,4,0" />
     </StackPanel>
   </Border>
 </UserControl>

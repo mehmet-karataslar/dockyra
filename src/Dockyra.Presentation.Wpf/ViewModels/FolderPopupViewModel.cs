@@ -14,6 +14,7 @@ public sealed partial class FolderPopupViewModel : ObservableObject
     private readonly IFolderService _folderService;
     private readonly IGroupService? _groupService;
     private readonly IApplicationLauncher _launcher;
+    private readonly IWindowManager? _windowManager;
     private ApplicationGroup? _activeGroup;
 
     public event EventHandler? GroupModified;
@@ -21,11 +22,13 @@ public sealed partial class FolderPopupViewModel : ObservableObject
     public FolderPopupViewModel(
         IFolderService folderService,
         IApplicationLauncher launcher,
-        IGroupService? groupService = null)
+        IGroupService? groupService = null,
+        IWindowManager? windowManager = null)
     {
         _folderService = folderService;
         _launcher = launcher;
         _groupService = groupService ?? (folderService as IGroupService);
+        _windowManager = windowManager;
     }
 
     public ApplicationGroup? ActiveGroup => _activeGroup;
@@ -97,6 +100,16 @@ public sealed partial class FolderPopupViewModel : ObservableObject
             return;
         }
 
+        // If this app inside the folder box is already running, focus/restore its window!
+        if (entry.IsRunning && entry.RunningWindowHandle is > 0 && _windowManager is not null)
+        {
+            var winId = new WindowId(entry.RunningWindowHandle.Value);
+            await _windowManager.RestoreWindowAsync(winId, cancellationToken);
+            await _windowManager.ActivateWindowAsync(winId, cancellationToken);
+            IsOpen = false;
+            return;
+        }
+
         LaunchResult result = await _launcher.LaunchAsync(
             new ApplicationLaunchRequest(entry.ExecutablePath, entry.Arguments),
             cancellationToken);
@@ -108,6 +121,35 @@ public sealed partial class FolderPopupViewModel : ObservableObject
         if (result.IsSuccess)
         {
             IsOpen = false;
+        }
+    }
+
+    [RelayCommand]
+    private async Task CloseFolderAppWindowAsync(ApplicationEntry? entry, CancellationToken cancellationToken)
+    {
+        if (entry?.RunningWindowHandle is > 0 && _windowManager is not null)
+        {
+            await _windowManager.CloseWindowAsync(new WindowId(entry.RunningWindowHandle.Value), cancellationToken);
+            entry.IsRunning = false;
+            entry.IsActive = false;
+            entry.RunningWindowHandle = null;
+            RefreshFilteredItems();
+            GroupModified?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    [RelayCommand]
+    private async Task EndFolderAppTaskAsync(ApplicationEntry? entry, CancellationToken cancellationToken)
+    {
+        if (entry?.RunningProcessId is > 0 && _windowManager is not null)
+        {
+            await _windowManager.TerminateProcessAsync(entry.RunningProcessId.Value, cancellationToken);
+            entry.IsRunning = false;
+            entry.IsActive = false;
+            entry.RunningWindowHandle = null;
+            entry.RunningProcessId = null;
+            RefreshFilteredItems();
+            GroupModified?.Invoke(this, EventArgs.Empty);
         }
     }
 

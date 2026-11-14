@@ -316,6 +316,9 @@ public sealed class DomainAndApplicationUnitTests
         public Task<OperationResult> CloseWindowAsync(WindowId windowId, CancellationToken cancellationToken = default) =>
             Task.FromResult(OperationResult.Success());
 
+        public Task<OperationResult> TerminateProcessAsync(int processId, CancellationToken cancellationToken = default) =>
+            Task.FromResult(OperationResult.Success());
+
         public void Dispose() { }
     }
 

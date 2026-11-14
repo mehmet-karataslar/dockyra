@@ -54,59 +54,139 @@ public sealed partial class SettingsViewModel : ObservableObject
         _profileService = profileService;
         _powerService = powerService;
         _taskbarViewModel = taskbarViewModel;
+        RebuildLocalizedColorPalettes();
     }
 
-    public IReadOnlyList<ColorPalettePreset> ColorPresets { get; } =
-    [
-        new ColorPalettePreset("Mat Arduvaz & Çelik", "#5B7C99", "#F21E2229", "Göz yormayan mat koyu arduvaz ve yumuşak çelik mavisi"),
-        new ColorPalettePreset("Kuzey Çamı & Adaçayı", "#5E8C76", "#F21B2421", "Doğal mat çam yeşili ve dingin adaçayı tonu"),
-        new ColorPalettePreset("Gece Sisi & Lacivert", "#6482AD", "#F219212E", "Yumuşak gece laciverti ve mat okyanus mavisi"),
-        new ColorPalettePreset("Sıcak Kahve & Toprak", "#A68A71", "#F2241F1C", "Doğal ahşap, espresso ve sıcak toprak tonları"),
-        new ColorPalettePreset("Mat Grafit & Karbon", "#7D8590", "#F2202327", "Nötr mat karbon gri ve yumuşak gümüş vurgu"),
-        new ColorPalettePreset("Pişmiş Toprak & Kil", "#B57B65", "#F2271E1C", "Sıcak kiremit, kil ve yumuşak bakır tonları"),
-        new ColorPalettePreset("Zeytin Dalı & Yosun", "#7E8F69", "#F21F241D", "Doğal mat zeytin yeşili ve yumuşak yaprak tonu"),
-        new ColorPalettePreset("Dingin Lavanta & Gri", "#847996", "#F2211E26", "Pastel mat lavanta ve yumuşak alacakaranlık"),
-        new ColorPalettePreset("Deniz Taşı & Turkuaz", "#5A8F99", "#F21A2427", "Parlamayan mat su yeşili ve okyanus çakılı"),
-        new ColorPalettePreset("Kum Taşı & Buğday", "#B89660", "#F226211A", "Sıcak mat buğday ve doğal kum taşı tonu"),
-        new ColorPalettePreset("Mürdüm & Gül Kurusu", "#9E6B7B", "#F2261D21", "Mat gül kurusu ve yumuşak kadife tonu"),
-        new ColorPalettePreset("İskandinav Fiyordu", "#4F7CAC", "#F2161E27", "Kuzey mat mavi ve koyu taş zemini"),
-        new ColorPalettePreset("Fildişi & Kum (Açık)", "#5B7C99", "#F5F2EFE9", "Göz yormayan sıcak fildişi açık masaüstü"),
-        new ColorPalettePreset("Adaçayı Beyazı (Açık)", "#5E8C76", "#F5EBF0EC", "Doğal açık adaçayı yeşili ve ferah zemin"),
-        new ColorPalettePreset("Bulut Grisi (Açık)", "#64748B", "#F5EDF2F7", "Yumuşak mat bulut grisi açık görünüm"),
-        new ColorPalettePreset("Sıcak Keten (Açık)", "#9C7A5B", "#F5F3EDE6", "Doğal keten beji ve sıcak kahve vurgu")
-    ];
+    public ObservableCollection<ColorPalettePreset> ColorPresets { get; } = [];
+    public ObservableCollection<ColorSwatchItem> SurfaceSwatches { get; } = [];
+    public ObservableCollection<ColorSwatchItem> AccentSwatches { get; } = [];
 
-    public IReadOnlyList<ColorSwatchItem> SurfaceSwatches { get; } =
-    [
-        new ColorSwatchItem("Arduvaz Koyu", "#F21E2229"),
-        new ColorSwatchItem("Karbon Siyah", "#F216181B"),
-        new ColorSwatchItem("Gece Laciverti", "#F219212E"),
-        new ColorSwatchItem("Kuzey Çamı", "#F21B2421"),
-        new ColorSwatchItem("Espresso Kahve", "#F2241F1C"),
-        new ColorSwatchItem("Zeytin Koyu", "#F21F241D"),
-        new ColorSwatchItem("Alacakaranlık Mor", "#F2211E26"),
-        new ColorSwatchItem("Deniz Derini", "#F21A2427"),
-        new ColorSwatchItem("Kiremit Toprak", "#F2271E1C"),
-        new ColorSwatchItem("Mürdüm Koyu", "#F2261D21"),
-        new ColorSwatchItem("Fildişi Açık", "#F5F2EFE9"),
-        new ColorSwatchItem("Bulut Açık", "#F5EDF2F7")
-    ];
+    private void RebuildLocalizedColorPalettes()
+    {
+        bool isEn = string.Equals(SelectedLanguage, "en-US", StringComparison.OrdinalIgnoreCase);
 
-    public IReadOnlyList<ColorSwatchItem> AccentSwatches { get; } =
-    [
-        new ColorSwatchItem("Çelik Mavisi", "#5B7C99"),
-        new ColorSwatchItem("Fiyort Mavisi", "#4F7CAC"),
-        new ColorSwatchItem("Adaçayı Yeşili", "#5E8C76"),
-        new ColorSwatchItem("Zeytin Yeşili", "#7E8F69"),
-        new ColorSwatchItem("Deniz Taşı", "#5A8F99"),
-        new ColorSwatchItem("Sıcak Toprak", "#A68A71"),
-        new ColorSwatchItem("Kum Buğday", "#B89660"),
-        new ColorSwatchItem("Pişmiş Kil", "#B57B65"),
-        new ColorSwatchItem("Gül Kurusu", "#9E6B7B"),
-        new ColorSwatchItem("Mat Lavanta", "#847996"),
-        new ColorSwatchItem("Grafit Gri", "#7D8590"),
-        new ColorSwatchItem("Keten Kahve", "#9C7A5B")
-    ];
+        ColorPresets.Clear();
+        ColorPalettePreset[] presets = isEn
+            ?
+            [
+                new("Windows 11 Mica Dark", "#0067C0", "#F01C1E24", "Native Windows 11 dark Mica surface & official Fluent blue"),
+                new("MacOS Midnight Glass", "#0A84FF", "#F016181F", "Sleek dark obsidian dock with crisp Apple blue accent"),
+                new("Deep Ocean & Sapphire", "#2563EB", "#F00F172A", "Rich sapphire blue accent on deep midnight navy"),
+                new("Nordic Aurora Frost", "#38BDF8", "#F01E293B", "Cool Nordic slate with vibrant sky blue highlights"),
+                new("Emerald Forest Studio", "#10B981", "#F0111C18", "Clean emerald green with deep pine charcoal backdrop"),
+                new("Royal Amethyst & Velvet", "#7C3AED", "#F0191524", "Refined royal violet on dark velvet slate"),
+                new("Crimson Ruby & Onyx", "#E11D48", "#F01F1418", "Rich ruby crimson accent with dark onyx glass"),
+                new("Warm Amber & Espresso", "#D97706", "#F0211B16", "Warm golden amber on roasted espresso dark surface"),
+                new("Titanium Carbon Pro", "#6366F1", "#F018181B", "Pro studio monochrome zinc with indigo highlights"),
+                new("Teal Horizon & Slate", "#0D9488", "#F0132022", "Modern oceanic teal with dark harbor slate"),
+                new("Rose Quartz & Plum", "#DB2777", "#F022161F", "Elegant rose quartz on deep plum background"),
+                new("Sunset Coral & Dusk", "#EA580C", "#F0231915", "Warm sunset coral on twilight dusk surface"),
+                new("Windows 11 Mica Light (Açık)", "#0067C0", "#F5F3F4F6", "Clean Windows 11 Daylight Mica & Fluent blue"),
+                new("MacOS Frost White (Açık)", "#007AFF", "#F5FFFFFF", "Pure frosted pearl white with classic blue"),
+                new("Mint Breeze Light (Açık)", "#059669", "#F5ECFDF5", "Fresh daylight mint and crisp emerald accent"),
+                new("Warm Sand & Latte (Açık)", "#B45309", "#F5FAF8F5", "Soft paper ivory with warm caramel accent")
+            ]
+            :
+            [
+                new("Windows 11 Koyu Mica", "#0067C0", "#F01C1E24", "Orijinal Windows 11 koyu Mica zemini ve resmi Fluent mavisi"),
+                new("MacOS Gece Camı (Midnight)", "#0A84FF", "#F016181F", "Şık obsidyen gece siyahı ve berrak safir mavi vurgu"),
+                new("Derin Okyanus & Safir", "#2563EB", "#F00F172A", "Gece laciverti zemin üzerinde canlı safir mavi"),
+                new("Kuzey Işıkları (Aurora)", "#38BDF8", "#F01E293B", "Modern kuzey arduvazı ve ferah gökyüzü mavisi"),
+                new("Zümrüt Orman Stüdyo", "#10B981", "#F0111C18", "Derin çam kömürü zemin ve berrak zümrüt yeşili"),
+                new("Kraliyet Ametist & Kadife", "#7C3AED", "#F0191524", "Koyu kadife zemin üzerinde asil ametist moru"),
+                new("Yakut Kırmızısı & Oniks", "#E11D48", "#F01F1418", "Koyu oniks cam zemini ve tok yakut kırmızısı"),
+                new("Sıcak Kehribar & Espresso", "#D97706", "#F0211B16", "Koyu espresso zemini ve sıcak altın kehribar"),
+                new("Titanyum Karbon Pro", "#6366F1", "#F018181B", "Profesyonel koyu titanyum gri ve indigo mavi vurgu"),
+                new("Turkuaz Ufuk & Liman", "#0D9488", "#F0132022", "Koyu okyanus zemini ve modern deniz turkuazı"),
+                new("Gül Kuvars & Mürdüm", "#DB2777", "#F022161F", "Zarif mürdüm zemin üzerinde canlı gül kuvars"),
+                new("Gün Batımı Mercan", "#EA580C", "#F0231915", "Alacakaranlık zemin ve sıcak mercan turuncusu"),
+                new("Windows 11 Açık Mica (Açık)", "#0067C0", "#F5F3F4F6", "Ferah Windows 11 gündüz Mica zemini ve Fluent mavisi"),
+                new("MacOS İnci Beyazı (Açık)", "#007AFF", "#F5FFFFFF", "Berrak buzlu inci beyazı ve klasik mavi"),
+                new("Ferah Nane & Zümrüt (Açık)", "#059669", "#F5ECFDF5", "Açık nane yeşili ferah zemin ve zümrüt vurgu"),
+                new("Sıcak Kum & Latte (Açık)", "#B45309", "#F5FAF8F5", "Yumuşak fildişi kağıt zemini ve karamel vurgu")
+            ];
+
+        foreach (ColorPalettePreset p in presets)
+        {
+            ColorPresets.Add(p);
+        }
+
+        SurfaceSwatches.Clear();
+        ColorSwatchItem[] surfaces = isEn
+            ?
+            [
+                new("Win11 Dark Mica", "#F01C1E24"),
+                new("Obsidian Black", "#F0121316"),
+                new("Midnight Navy", "#F00F172A"),
+                new("Nordic Slate", "#F01E293B"),
+                new("Emerald Charcoal", "#F0111C18"),
+                new("Velvet Amethyst", "#F0191524"),
+                new("Onyx Ruby Dark", "#F01F1418"),
+                new("Espresso Dark", "#F0211B16"),
+                new("Harbor Teal Dark", "#F0132022"),
+                new("Titanium Zinc", "#F018181B"),
+                new("Win11 Light Mica (Açık)", "#F5F3F4F6"),
+                new("Pearl White (Açık)", "#F5FFFFFF")
+            ]
+            :
+            [
+                new("Win11 Koyu Mica", "#F01C1E24"),
+                new("Obsidyen Siyah", "#F0121316"),
+                new("Gece Laciverti", "#F00F172A"),
+                new("Kuzey Arduvazı", "#F01E293B"),
+                new("Zümrüt Kömürü", "#F0111C18"),
+                new("Kadife Ametist", "#F0191524"),
+                new("Oniks Yakut Koyu", "#F01F1418"),
+                new("Espresso Koyu", "#F0211B16"),
+                new("Liman Turkuaz Koyu", "#F0132022"),
+                new("Titanyum Gri", "#F018181B"),
+                new("Win11 Açık Mica (Açık)", "#F5F3F4F6"),
+                new("İnci Beyazı (Açık)", "#F5FFFFFF")
+            ];
+
+        foreach (ColorSwatchItem s in surfaces)
+        {
+            SurfaceSwatches.Add(s);
+        }
+
+        AccentSwatches.Clear();
+        ColorSwatchItem[] accents = isEn
+            ?
+            [
+                new("Fluent Blue", "#0067C0"),
+                new("Sapphire Blue", "#2563EB"),
+                new("Sky Cyan", "#0284C7"),
+                new("Emerald Green", "#10B981"),
+                new("Ocean Teal", "#0D9488"),
+                new("Indigo Pro", "#6366F1"),
+                new("Royal Violet", "#7C3AED"),
+                new("Crimson Ruby", "#E11D48"),
+                new("Rose Quartz", "#DB2777"),
+                new("Golden Amber", "#D97706"),
+                new("Sunset Coral", "#EA580C"),
+                new("Slate Silver", "#64748B")
+            ]
+            :
+            [
+                new("Fluent Mavisi", "#0067C0"),
+                new("Safir Mavi", "#2563EB"),
+                new("Gökyüzü Mavisi", "#0284C7"),
+                new("Zümrüt Yeşili", "#10B981"),
+                new("Okyanus Turkuazı", "#0D9488"),
+                new("İndigo Mavi", "#6366F1"),
+                new("Kraliyet Moru", "#7C3AED"),
+                new("Yakut Kırmızısı", "#E11D48"),
+                new("Gül Kuvars", "#DB2777"),
+                new("Altın Kehribar", "#D97706"),
+                new("Mercan Turuncu", "#EA580C"),
+                new("Gümüş Arduvaz", "#64748B")
+            ];
+
+        foreach (ColorSwatchItem a in accents)
+        {
+            AccentSwatches.Add(a);
+        }
+    }
 
     public IReadOnlyList<TaskbarDockEdge> DockEdgeOptions { get; } = Enum.GetValues<TaskbarDockEdge>();
     public IReadOnlyList<TaskbarAlignment> AlignmentOptions { get; } = Enum.GetValues<TaskbarAlignment>();
@@ -232,14 +312,19 @@ public sealed partial class SettingsViewModel : ObservableObject
 
     partial void OnSelectedLanguageChanged(string value)
     {
-        if (_isLoading || string.IsNullOrWhiteSpace(value))
+        if (string.IsNullOrWhiteSpace(value))
         {
             return;
         }
 
         _localizationService.ApplyLanguage(value);
+        RebuildLocalizedColorPalettes();
         UpdateTaskbarStateBanner();
-        _ = SaveAndApplyAsync();
+
+        if (!_isLoading)
+        {
+            _ = SaveAndApplyAsync();
+        }
     }
 
     private void PushLiveGeometryUpdate()
@@ -276,10 +361,11 @@ public sealed partial class SettingsViewModel : ObservableObject
 
         SelectedLanguage = languageCode;
         _localizationService.ApplyLanguage(languageCode);
+        RebuildLocalizedColorPalettes();
         UpdateTaskbarStateBanner();
         StatusMessage = string.Equals(languageCode, "en-US", StringComparison.OrdinalIgnoreCase)
-            ? "Language switched to English."
-            : "Uygulama dili Türkçe olarak değiştirildi.";
+            ? "Language switched to English (Palettes & UI updated)."
+            : "Uygulama dili ve renk paletleri Türkçe olarak güncellendi.";
     }
 
     [RelayCommand]
@@ -458,6 +544,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         }
 
         _themeService.ApplyColorPalette(AccentColorHex, SurfaceColorHex);
+        _ = SaveAndApplyAsync();
         StatusMessage = $"'{preset.Name}' renk paleti canlı olarak uygulandı.";
     }
 
@@ -466,6 +553,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     {
         _themeService.ApplyTheme(SelectedTheme);
         _themeService.ApplyColorPalette(AccentColorHex, SurfaceColorHex);
+        _ = SaveAndApplyAsync();
         StatusMessage = "Seçilen renk tonları canlı olarak uygulandı.";
     }
 
@@ -483,6 +571,7 @@ public sealed partial class SettingsViewModel : ObservableObject
             : ThemeKind.Dark;
         _themeService.ApplyTheme(SelectedTheme);
         _themeService.ApplyColorPalette(AccentColorHex, SurfaceColorHex);
+        _ = SaveAndApplyAsync();
         StatusMessage = $"Görev çubuğu arka plan rengi '{swatch.Label}' olarak değiştirildi.";
     }
 
@@ -496,6 +585,7 @@ public sealed partial class SettingsViewModel : ObservableObject
 
         AccentColorHex = swatch.ColorHex;
         _themeService.ApplyColorPalette(AccentColorHex, SurfaceColorHex);
+        _ = SaveAndApplyAsync();
         StatusMessage = $"Vurgu rengi '{swatch.Label}' olarak değiştirildi.";
     }
 

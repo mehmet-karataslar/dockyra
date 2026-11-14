@@ -155,6 +155,15 @@
                                      FontSize="11.5"
                                      Margin="6,0,0,0"
                                      VerticalAlignment="Center" />
+
+                          <!-- Green / Accent Running Dot when an app inside this Folder Box is open! -->
+                          <Border Width="7"
+                                  Height="7"
+                                  CornerRadius="3.5"
+                                  Background="{DynamicResource Token.Brush.Accent}"
+                                  Margin="6,0,2,0"
+                                  VerticalAlignment="Center"
+                                  Visibility="{Binding HasRunningApplications, Converter={StaticResource BoolToVis}}" />
                         </StackPanel>
                       </Button>
                     </Border>
@@ -198,10 +207,45 @@
                               PreviewMouseMove="OnUnifiedAppPreviewMouseMove"
                               DragOver="OnUnifiedAppDragOver"
                               Drop="OnUnifiedAppDrop"
+                              Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}"
                               Background="Transparent"
                               BorderThickness="0"
                               Padding="7,4"
                               ToolTip="{Binding TooltipText}">
+                        <Button.ContextMenu>
+                          <ContextMenu Background="{DynamicResource Theme.Brush.Surface}"
+                                       BorderBrush="{DynamicResource Token.Brush.Accent}"
+                                       BorderThickness="1.5"
+                                       Foreground="{DynamicResource Theme.Brush.TextPrimary}"
+                                       Padding="4">
+                            <MenuItem Header="{Binding DisplayName}"
+                                      FontWeight="Bold"
+                                      IsEnabled="False" />
+                            <Separator />
+                            <MenuItem Header="{DynamicResource Loc.Context.SwitchOrRestore}"
+                                      Command="{Binding PlacementTarget.Tag.ClickUnifiedTaskbarItemCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                      CommandParameter="{Binding}"
+                                      Visibility="{Binding IsRunning, Converter={StaticResource BoolToVis}}" />
+                            <MenuItem Header="{DynamicResource Loc.Context.NewWindow}"
+                                      Command="{Binding PlacementTarget.Tag.LaunchNewInstanceOfUnifiedItemCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                      CommandParameter="{Binding}" />
+                            <MenuItem Header="{DynamicResource Loc.Context.MinimizeWindow}"
+                                      Command="{Binding PlacementTarget.Tag.MinimizeUnifiedItemWindowCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                      CommandParameter="{Binding}"
+                                      Visibility="{Binding IsRunning, Converter={StaticResource BoolToVis}}" />
+                            <Separator Visibility="{Binding IsRunning, Converter={StaticResource BoolToVis}}" />
+                            <MenuItem Header="{DynamicResource Loc.Context.CloseWindow}"
+                                      Command="{Binding PlacementTarget.Tag.CloseUnifiedItemWindowCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                      CommandParameter="{Binding}"
+                                      Visibility="{Binding IsRunning, Converter={StaticResource BoolToVis}}" />
+                            <MenuItem Header="{DynamicResource Loc.Context.EndTask}"
+                                      Command="{Binding PlacementTarget.Tag.EndUnifiedItemTaskCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                      CommandParameter="{Binding}"
+                                      Foreground="#F87171"
+                                      FontWeight="Bold"
+                                      Visibility="{Binding IsRunning, Converter={StaticResource BoolToVis}}" />
+                          </ContextMenu>
+                        </Button.ContextMenu>
                         <Grid>
                           <Grid.RowDefinitions>
                             <RowDefinition Height="*" />

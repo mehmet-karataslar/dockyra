@@ -99,7 +99,7 @@ public sealed class Win32WindowManager : IWindowManager
             return Task.FromResult(OperationResult.Failure(
                 "PROCESS_PROTECTED",
                 "Cannot terminate system or current Dockyra process.",
-                ErrorCategory.Security));
+                ErrorCategory.Validation));
         }
 
         try
@@ -115,7 +115,7 @@ public sealed class Win32WindowManager : IWindowManager
                 return Task.FromResult(OperationResult.Failure(
                     "SHELL_PROCESS_PROTECTED",
                     $"Protected Windows process '{procName}' cannot be terminated.",
-                    ErrorCategory.Security));
+                    ErrorCategory.Validation));
             }
 
             proc.Kill(entireProcessTree: false);

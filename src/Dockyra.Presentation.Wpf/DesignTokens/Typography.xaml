@@ -6,5 +6,108 @@
   <sys:Double x:Key="Token.FontSize.Body">13</sys:Double>
   <sys:Double x:Key="Token.FontSize.Subtitle">15</sys:Double>
   <sys:Double x:Key="Token.FontSize.Title">18</sys:Double>
-</ResourceDictionary>
 
+  <!-- Native Windows 11 WinUI 3 Button Style -->
+  <Style TargetType="Button">
+    <Setter Property="Background" Value="{DynamicResource Theme.Brush.CardHover}" />
+    <Setter Property="Foreground" Value="{DynamicResource Theme.Brush.TextPrimary}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Theme.Brush.Border}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Padding" Value="12,6" />
+    <Setter Property="FontFamily" Value="{DynamicResource Token.Font.Primary}" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Button">
+          <Border x:Name="BtnBorder"
+                  Background="{TemplateBinding Background}"
+                  BorderBrush="{TemplateBinding BorderBrush}"
+                  BorderThickness="{TemplateBinding BorderThickness}"
+                  CornerRadius="7"
+                  Padding="{TemplateBinding Padding}">
+            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="BtnBorder" Property="BorderBrush" Value="{DynamicResource Token.Brush.Accent}" />
+              <Setter TargetName="BtnBorder" Property="Opacity" Value="0.93" />
+            </Trigger>
+            <Trigger Property="IsPressed" Value="True">
+              <Setter TargetName="BtnBorder" Property="Opacity" Value="0.80" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- Native Windows 11 TextBox Style -->
+  <Style TargetType="TextBox">
+    <Setter Property="Background" Value="{DynamicResource Theme.Brush.Card}" />
+    <Setter Property="Foreground" Value="{DynamicResource Theme.Brush.TextPrimary}" />
+    <Setter Property="CaretBrush" Value="{DynamicResource Token.Brush.Accent}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Theme.Brush.Border}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Padding" Value="10,6" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="TextBox">
+          <Border x:Name="TxtBorder"
+                  Background="{TemplateBinding Background}"
+                  BorderBrush="{TemplateBinding BorderBrush}"
+                  BorderThickness="{TemplateBinding BorderThickness}"
+                  CornerRadius="7">
+            <ScrollViewer x:Name="PART_ContentHost" Margin="2" />
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsKeyboardFocused" Value="True">
+              <Setter TargetName="TxtBorder" Property="BorderBrush" Value="{DynamicResource Token.Brush.Accent}" />
+              <Setter TargetName="TxtBorder" Property="BorderThickness" Value="1.5" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- Native Windows 11 TabControl & TabItem Style -->
+  <Style TargetType="TabControl">
+    <Setter Property="Background" Value="{DynamicResource Theme.Brush.Card}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Theme.Brush.Border}" />
+    <Setter Property="BorderThickness" Value="1" />
+  </Style>
+
+  <Style TargetType="TabItem">
+    <Setter Property="Foreground" Value="{DynamicResource Theme.Brush.TextSecondary}" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="FontSize" Value="12.5" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="TabItem">
+          <Border x:Name="TabBorder"
+                  Background="Transparent"
+                  CornerRadius="8"
+                  Padding="14,8"
+                  Margin="0,0,6,6"
+                  BorderThickness="1"
+                  BorderBrush="Transparent">
+            <ContentPresenter ContentSource="Header" VerticalAlignment="Center" HorizontalAlignment="Center" />
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="TabBorder" Property="Background" Value="{DynamicResource Theme.Brush.CardHover}" />
+              <Setter Property="Foreground" Value="{DynamicResource Theme.Brush.TextPrimary}" />
+            </Trigger>
+            <Trigger Property="IsSelected" Value="True">
+              <Setter TargetName="TabBorder" Property="Background" Value="{DynamicResource Token.Brush.Accent}" />
+              <Setter Property="Foreground" Value="White" />
+              <Setter Property="FontWeight" Value="Bold" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+</ResourceDictionary>

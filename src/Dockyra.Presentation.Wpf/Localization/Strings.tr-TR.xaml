@@ -69,4 +69,12 @@
   <sys:String x:Key="Loc.Action.FullTaskbar">🚀 Tam Görev Çubuğu Olarak Uygula</sys:String>
   <sys:String x:Key="Loc.Action.OverlayTaskbar">🔗 Mevcut Çubuk Üzerine Entegre Et</sys:String>
   <sys:String x:Key="Loc.Action.RestoreMicrosoft">⏪ Orijinal Microsoft Çubuğuna Dön</sys:String>
+
+  <!-- Right-Click Taskbar Context Menu -->
+  <sys:String x:Key="Loc.Context.SwitchOrRestore">🪟 Pencereyi Öne Getir / Göster</sys:String>
+  <sys:String x:Key="Loc.Context.NewWindow">🚀 Uygulamayı Başlat / Yeni Pencere Aç</sys:String>
+  <sys:String x:Key="Loc.Context.MinimizeWindow">🗕 Pencereyi Küçült (Minimize)</sys:String>
+  <sys:String x:Key="Loc.Context.CloseWindow">✕ Pencereyi Kapat</sys:String>
+  <sys:String x:Key="Loc.Context.EndTask">⚡ Görevi Sonlandır (End Task)</sys:String>
+  <sys:String x:Key="Loc.Context.RemoveFromFolder">📤 Kutudan Çıkar (Görev Çubuğuna Al)</sys:String>
 </ResourceDictionary>

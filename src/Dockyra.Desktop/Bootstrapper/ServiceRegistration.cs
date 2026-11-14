@@ -89,7 +89,11 @@ public static class ServiceRegistration
         // Presentation.Wpf (Themes, Localization, ViewModels, Views)
         services.AddSingleton<IThemeService, WpfThemeService>();
         services.AddSingleton<ILocalizationService, WpfLocalizationService>();
-        services.AddTransient<FolderPopupViewModel>();
+        services.AddTransient<FolderPopupViewModel>(sp => new FolderPopupViewModel(
+            sp.GetRequiredService<IFolderService>(),
+            sp.GetRequiredService<IApplicationLauncher>(),
+            sp.GetRequiredService<IGroupService>(),
+            sp.GetRequiredService<IWindowManager>()));
         services.AddSingleton<TaskbarViewModel>();
         services.AddTransient<SettingsViewModel>();
         services.AddTransient<SettingsWindow>();

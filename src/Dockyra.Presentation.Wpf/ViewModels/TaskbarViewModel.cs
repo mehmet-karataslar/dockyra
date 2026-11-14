@@ -513,6 +513,67 @@ public sealed partial class TaskbarViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
+    public async Task LaunchNewInstanceOfUnifiedItemAsync(UnifiedTaskbarAppItem? item, CancellationToken cancellationToken = default)
+    {
+        if (item is null || string.IsNullOrWhiteSpace(item.LaunchPath) || _applicationLauncher is null)
+        {
+            return;
+        }
+
+        LaunchResult result = await _applicationLauncher.LaunchAsync(
+            new ApplicationLaunchRequest(item.LaunchPath),
+            cancellationToken);
+
+        StatusBanner = result.IsSuccess
+            ? $"{item.DisplayName} (yeni pencere) başlatıldı."
+            : result.ErrorMessage ?? "Uygulama başlatılamadı.";
+    }
+
+    [RelayCommand]
+    public async Task MinimizeUnifiedItemWindowAsync(UnifiedTaskbarAppItem? item, CancellationToken cancellationToken = default)
+    {
+        if (item?.PrimaryWindow is null)
+        {
+            return;
+        }
+
+        await _windowManager.MinimizeWindowAsync(item.PrimaryWindow.Id, cancellationToken);
+        await RefreshWindowsAsync(cancellationToken);
+    }
+
+    [RelayCommand]
+    public async Task CloseUnifiedItemWindowAsync(UnifiedTaskbarAppItem? item, CancellationToken cancellationToken = default)
+    {
+        if (item?.PrimaryWindow is null)
+        {
+            return;
+        }
+
+        OperationResult res = await _windowManager.CloseWindowAsync(item.PrimaryWindow.Id, cancellationToken);
+        StatusBanner = res.IsSuccess
+            ? $"'{item.DisplayName}' penceresi kapatıldı."
+            : res.Error?.Message ?? "Pencere kapatılamadı.";
+        await Task.Delay(120, cancellationToken);
+        await RefreshWindowsAsync(cancellationToken);
+    }
+
+    [RelayCommand]
+    public async Task EndUnifiedItemTaskAsync(UnifiedTaskbarAppItem? item, CancellationToken cancellationToken = default)
+    {
+        if (item?.PrimaryWindow is null)
+        {
+            return;
+        }
+
+        OperationResult res = await _windowManager.TerminateProcessAsync(item.PrimaryWindow.ProcessId, cancellationToken);
+        StatusBanner = res.IsSuccess
+            ? $"⚡ '{item.DisplayName}' görevi sonlandırıldı."
+            : res.Error?.Message ?? "Görev sonlandırılamadı.";
+        await Task.Delay(120, cancellationToken);
+        await RefreshWindowsAsync(cancellationToken);
+    }
+
+    [RelayCommand]
     public void OpenWifiSettings() => _taskbarVisibilityService?.OpenSystemQuickAction("wifi");
 
     [RelayCommand]
@@ -686,43 +747,67 @@ public sealed partial class TaskbarViewModel : ObservableObject, IDisposable
     {
         UnifiedTaskbarItems.Clear();
 
-        // Collect apps that are already placed inside an Android folder box so they don't duplicate on the main dock unless running
+        var matchedWindowIds = new HashSet<ulong>();
         var folderAppNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        var folderAppPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        // 0. First, match open windows against apps inside Android Folder Boxes so apps in a Folder Box STAY inside that Folder Box even when running!
         foreach (ApplicationGroup grp in Groups)
         {
             foreach (ApplicationEntry entry in grp.Applications)
             {
-                if (!string.IsNullOrWhiteSpace(entry.DisplayName))
+                string normEntry = NormalizeToken(entry.DisplayName);
+                if (!string.IsNullOrWhiteSpace(normEntry))
                 {
-                    folderAppNames.Add(NormalizeToken(entry.DisplayName));
+                    folderAppNames.Add(normEntry);
                 }
-                if (!string.IsNullOrWhiteSpace(entry.ExecutablePath))
+
+                List<WindowInfo> folderMatchingWins = OpenWindows
+                    .Where(w => IsAppNameOrPathMatchingWindow(entry.DisplayName, entry.ExecutablePath, w))
+                    .ToList();
+
+                foreach (WindowInfo fw in folderMatchingWins)
                 {
-                    folderAppPaths.Add(Path.GetFileNameWithoutExtension(entry.ExecutablePath));
+                    matchedWindowIds.Add(fw.Id.Value);
+                }
+
+                WindowInfo? activeOrFirstFolderWin = folderMatchingWins.FirstOrDefault(w => w.IsActive) ?? folderMatchingWins.FirstOrDefault();
+                entry.IsRunning = folderMatchingWins.Count > 0;
+                entry.IsActive = folderMatchingWins.Any(w => w.IsActive);
+                entry.RunningWindowHandle = activeOrFirstFolderWin?.Id.Value;
+                entry.RunningProcessId = activeOrFirstFolderWin?.ProcessId;
+                if (activeOrFirstFolderWin?.IconBgra32 is not null)
+                {
+                    entry.IconBgra32 ??= activeOrFirstFolderWin.IconBgra32;
                 }
             }
         }
 
-        var matchedWindowIds = new HashSet<ulong>();
+        // Refresh open folder popup if it is currently visible
+        if (FolderPopup.IsOpen && FolderPopup.ActiveGroup is not null)
+        {
+            ApplicationGroup? updatedActiveGrp = Groups.FirstOrDefault(g => g.Id == FolderPopup.ActiveGroup.Id);
+            if (updatedActiveGrp is not null)
+            {
+                FolderPopup.LoadGroup(updatedActiveGrp);
+            }
+        }
 
-        // 1. Pinned apps (merged with running windows if the pinned app is currently open)
+        // 1. Pinned apps (skip if the user placed this app inside an Android Folder Box!)
         foreach (PinnedTaskbarItem pin in PinnedApps)
         {
             string normPin = NormalizeToken(pin.DisplayName);
+            if (folderAppNames.Contains(normPin))
+            {
+                continue;
+            }
+
             List<WindowInfo> matchingWindows = OpenWindows
-                .Where(w => IsPinMatchingWindow(pin, w))
+                .Where(w => !matchedWindowIds.Contains(w.Id.Value) && IsPinMatchingWindow(pin, w))
                 .ToList();
 
             foreach (WindowInfo mw in matchingWindows)
             {
                 matchedWindowIds.Add(mw.Id.Value);
-            }
-
-            // If the user put this pinned app inside an Android Folder Box and it's NOT currently running, keep it inside the folder box
-            if (matchingWindows.Count == 0 && folderAppNames.Contains(normPin))
-            {
-                continue;
             }
 
             WindowInfo? activeOrFirst = matchingWindows.FirstOrDefault(w => w.IsActive) ?? matchingWindows.FirstOrDefault();
@@ -743,7 +828,7 @@ public sealed partial class TaskbarViewModel : ObservableObject, IDisposable
             });
         }
 
-        // 2. Remaining open windows that are not pinned
+        // 2. Remaining open windows that are neither inside a Folder Box nor matched to a Pinned icon
         foreach (WindowInfo win in OpenWindows)
         {
             if (matchedWindowIds.Contains(win.Id.Value))
@@ -764,6 +849,34 @@ public sealed partial class TaskbarViewModel : ObservableObject, IDisposable
                 PrimaryWindow = win
             });
         }
+    }
+
+    private static bool IsAppNameOrPathMatchingWindow(string displayName, string? executableOrShortcutPath, WindowInfo win)
+    {
+        var syntheticPin = new PinnedTaskbarItem("tmp", displayName, executableOrShortcutPath ?? string.Empty, "tmp");
+        if (IsPinMatchingWindow(syntheticPin, win))
+        {
+            return true;
+        }
+
+        string titleNorm = NormalizeToken(win.Title);
+        string nameNorm = NormalizeToken(displayName);
+        if (nameNorm.Length >= 4 && titleNorm.Contains(nameNorm, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        if (!string.IsNullOrWhiteSpace(executableOrShortcutPath))
+        {
+            string entryExeNorm = NormalizeToken(Path.GetFileNameWithoutExtension(executableOrShortcutPath));
+            string winProcNorm = NormalizeToken(win.ProcessName);
+            if (!string.IsNullOrEmpty(entryExeNorm) && string.Equals(entryExeNorm, winProcNorm, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static bool IsPinMatchingWindow(PinnedTaskbarItem pin, WindowInfo win)
