@@ -14,8 +14,16 @@ internal static class Win32NativeMethods
     internal const int SW_MINIMIZE = 6;
     internal const int SW_RESTORE = 9;
     internal const uint WM_CLOSE = 0x0010;
+    internal const uint WM_GETICON = 0x007F;
     internal const uint WM_SYSCOMMAND = 0x0112;
     internal const int SC_TASKLIST = 0xF130;
+
+    internal const int ICON_SMALL = 0;
+    internal const int ICON_BIG = 1;
+    internal const int ICON_SMALL2 = 2;
+    internal const int GCLP_HICON = -14;
+    internal const int GCLP_HICONSM = -34;
+    internal const uint SMTO_ABORTIFHUNG = 0x0002;
 
     internal const int DWMWA_CLOAKED = 14;
 
@@ -157,6 +165,27 @@ internal static class Win32NativeMethods
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static extern bool PostMessageW(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    internal static extern IntPtr SendMessageTimeoutW(
+        IntPtr hWnd,
+        uint msg,
+        IntPtr wParam,
+        IntPtr lParam,
+        uint fuFlags,
+        uint uTimeout,
+        out IntPtr lpdwResult);
+
+    [DllImport("user32.dll", EntryPoint = "GetClassLongPtrW", SetLastError = true)]
+    internal static extern IntPtr GetClassLongPtr(IntPtr hWnd, int nIndex);
+
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
+    internal static extern uint ExtractIconExW(
+        string lpszFile,
+        int nIconIndex,
+        IntPtr[]? phiconLarge,
+        IntPtr[]? phiconSmall,
+        uint nIcons);
 
     [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     internal static extern int GetWindowTextLengthW(IntPtr hWnd);

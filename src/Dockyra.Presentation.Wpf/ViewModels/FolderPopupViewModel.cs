@@ -12,19 +12,38 @@ namespace Dockyra.Presentation.Wpf.ViewModels;
 public sealed partial class FolderPopupViewModel : ObservableObject
 {
     private readonly IFolderService _folderService;
+    private readonly IGroupService? _groupService;
     private readonly IApplicationLauncher _launcher;
     private ApplicationGroup? _activeGroup;
 
+    public event EventHandler? GroupModified;
+
     public FolderPopupViewModel(
         IFolderService folderService,
-        IApplicationLauncher launcher)
+        IApplicationLauncher launcher,
+        IGroupService? groupService = null)
     {
         _folderService = folderService;
         _launcher = launcher;
+        _groupService = groupService ?? (folderService as IGroupService);
     }
+
+    public ApplicationGroup? ActiveGroup => _activeGroup;
 
     [ObservableProperty]
     private string _groupTitle = string.Empty;
+
+    partial void OnGroupTitleChanged(string value)
+    {
+        if (_activeGroup is not null && !string.IsNullOrWhiteSpace(value) && !string.Equals(_activeGroup.Name, value.Trim(), StringComparison.Ordinal))
+        {
+            _activeGroup.Name = value.Trim();
+            if (_groupService is not null)
+            {
+                _ = _groupService.SaveGroupAsync(_activeGroup);
+            }
+        }
+    }
 
     [ObservableProperty]
     private string _groupColorHex = "#3B82F6";
@@ -90,6 +109,41 @@ public sealed partial class FolderPopupViewModel : ObservableObject
         {
             IsOpen = false;
         }
+    }
+
+    [RelayCommand]
+    private async Task RemoveApplicationFromFolderAsync(ApplicationEntry? entry, CancellationToken cancellationToken)
+    {
+        if (entry is null || _activeGroup is null || _groupService is null)
+        {
+            return;
+        }
+
+        await _groupService.RemoveApplicationFromGroupAsync(_activeGroup.Id, entry.Id, cancellationToken);
+        _activeGroup.Applications.RemoveAll(a => string.Equals(a.Id, entry.Id, StringComparison.Ordinal));
+        RefreshFilteredItems();
+        StatusMessage = $"{entry.DisplayName} kutudan çıkarıldı.";
+
+        if (_activeGroup.Applications.Count == 0)
+        {
+            await _groupService.DeleteGroupAsync(_activeGroup.Id, cancellationToken);
+            IsOpen = false;
+        }
+
+        GroupModified?.Invoke(this, EventArgs.Empty);
+    }
+
+    [RelayCommand]
+    private async Task DeleteCurrentFolderAsync(CancellationToken cancellationToken)
+    {
+        if (_activeGroup is null || _groupService is null)
+        {
+            return;
+        }
+
+        await _groupService.DeleteGroupAsync(_activeGroup.Id, cancellationToken);
+        IsOpen = false;
+        GroupModified?.Invoke(this, EventArgs.Empty);
     }
 
     private void RefreshFilteredItems()

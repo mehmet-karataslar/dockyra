@@ -38,14 +38,7 @@ public sealed class ApplicationGroupService : IGroupService, IFolderService
             return groups;
         }
 
-        IReadOnlyList<ApplicationGroup> defaults = CreateDefaultSeedGroups();
-        foreach (ApplicationGroup group in defaults)
-        {
-            await _groupRepository.SaveGroupAsync(group, cancellationToken).ConfigureAwait(false);
-        }
-
-        PopulateGroupIcons(defaults);
-        return defaults;
+        return [];
     }
 
     private void PopulateGroupIcons(IEnumerable<ApplicationGroup> groups)
@@ -220,53 +213,17 @@ public sealed class ApplicationGroupService : IGroupService, IFolderService
 
         List<ApplicationGroup> groups = (await GetAllGroupsAsync(cancellationToken).ConfigureAwait(false)).ToList();
 
-        ApplicationGroup? pinnedGroup = groups.FirstOrDefault(g => string.Equals(g.Id, "grp-pinned", StringComparison.Ordinal));
-        if (pinnedGroup is null)
+        // Remove legacy auto-generated preset groups if they were never customized by the user
+        string[] legacyPresetIds = ["grp-pinned", "grp-dev", "grp-browsers", "grp-comm", "grp-system"];
+        foreach (string legacyId in legacyPresetIds)
         {
-            pinnedGroup = new ApplicationGroup
+            ApplicationGroup? legacyGroup = groups.FirstOrDefault(g => string.Equals(g.Id, legacyId, StringComparison.Ordinal));
+            if (legacyGroup is not null)
             {
-                Id = "grp-pinned",
-                Name = "Sabitlenenler",
-                Icon = "PinGlyph",
-                ColorHex = "#5B7C99",
-                Description = "Mevcut Windows 11 görev çubuğundaki sabitlenmiş uygulamalarınız",
-                SortOrder = -1,
-                ViewMode = FolderViewMode.Grid,
-                Applications = []
-            };
-            groups.Insert(0, pinnedGroup);
-        }
-
-        pinnedGroup.Applications.Clear();
-        int pinOrder = 0;
-        foreach (PinnedTaskbarItem item in pinnedItems)
-        {
-            pinnedGroup.Applications.Add(new ApplicationEntry
-            {
-                Id = item.Id,
-                DisplayName = item.DisplayName,
-                ExecutablePath = item.ShortcutPath,
-                SortOrder = pinOrder++
-            });
-
-            ApplicationGroup? categoryTarget = groups.FirstOrDefault(g => string.Equals(g.Id, item.CategoryGroupId, StringComparison.Ordinal));
-            if (categoryTarget is not null &&
-                !categoryTarget.Applications.Any(a =>
-                    string.Equals(a.DisplayName, item.DisplayName, StringComparison.OrdinalIgnoreCase) ||
-                    string.Equals(a.ExecutablePath, item.ShortcutPath, StringComparison.OrdinalIgnoreCase)))
-            {
-                categoryTarget.Applications.Add(new ApplicationEntry
-                {
-                    Id = $"{item.Id}-{categoryTarget.Id}",
-                    DisplayName = item.DisplayName,
-                    ExecutablePath = item.ShortcutPath,
-                    SortOrder = categoryTarget.Applications.Count
-                });
-                await _groupRepository.SaveGroupAsync(categoryTarget, cancellationToken).ConfigureAwait(false);
+                await _groupRepository.DeleteGroupAsync(legacyId, cancellationToken).ConfigureAwait(false);
+                groups.Remove(legacyGroup);
             }
         }
-
-        await _groupRepository.SaveGroupAsync(pinnedGroup, cancellationToken).ConfigureAwait(false);
     }
 
     public string? SuggestGroupForWindow(WindowInfo window)

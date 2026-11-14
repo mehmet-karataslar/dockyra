@@ -163,13 +163,20 @@ public sealed class DomainAndApplicationUnitTests
 
         await vm.InitializeAsync();
 
-        Assert.NotEmpty(vm.Groups);
         Assert.NotEmpty(vm.Profiles);
         Assert.NotNull(vm.ActiveProfile);
         Assert.Single(vm.OpenWindows);
+        Assert.Single(vm.UnifiedTaskbarItems);
 
-        ApplicationGroup devGroup = vm.Groups.First(g => g.Id == "grp-dev");
-        vm.OpenGroupFolder(devGroup);
+        OperationResult<ApplicationGroup> created = await groupService.CreateGroupAsync("Kutu 1", "#5B7C99", "FolderGlyph");
+        Assert.True(created.IsSuccess);
+        await groupService.AddApplicationToGroupAsync(created.Value!.Id, new ApplicationEntry { Id = "app-notepad", DisplayName = "Notepad", ExecutablePath = @"C:\Windows\System32\notepad.exe" });
+        await groupService.AddApplicationToGroupAsync(created.Value!.Id, new ApplicationEntry { Id = "app-cmd", DisplayName = "Command Prompt", ExecutablePath = @"C:\Windows\System32\cmd.exe" });
+        await vm.ReloadAllConfigurationAsync();
+
+        Assert.NotEmpty(vm.Groups);
+        ApplicationGroup customBox = vm.Groups.First();
+        vm.OpenGroupFolder(customBox);
         Assert.True(vm.FolderPopup.IsOpen);
         Assert.Equal(2, vm.FolderPopup.FilteredApplications.Count);
 
@@ -178,7 +185,7 @@ public sealed class DomainAndApplicationUnitTests
     }
 
     [Fact]
-    public async Task TaskbarViewModel_SyncsNativePinnedItems_AndTogglesIntegrationModesReversibly()
+    public async Task TaskbarViewModel_SyncsNativePinnedItems_MergesRunningWindows_AndCreatesFolderFromTwoApps()
     {
         var layoutRepo = new InMemoryLayoutRepo();
         var groupRepo = new InMemoryGroupRepo();
@@ -211,7 +218,19 @@ public sealed class DomainAndApplicationUnitTests
 
             Assert.False(vm.IsDockyraActive);
             Assert.False(fakeTaskbarVisibility.IsNativeTaskbarHiddenByDockyra);
-            Assert.Contains(vm.Groups, g => g.Id == "grp-pinned");
+
+            // Visual Studio Code is both pinned and running in FakeWindowManager -> merged into 1 running item!
+            Assert.Equal(2, vm.UnifiedTaskbarItems.Count);
+            UnifiedTaskbarAppItem vscodeItem = vm.UnifiedTaskbarItems.First(i => i.Id == "pin-vscode");
+            Assert.True(vscodeItem.IsRunning);
+            Assert.True(vscodeItem.IsActive);
+
+            // Dragging Chrome onto VS Code creates an Android-style folder box ("Kutu 1")
+            UnifiedTaskbarAppItem chromeItem = vm.UnifiedTaskbarItems.First(i => i.Id == "pin-chrome");
+            ApplicationGroup? folderBox = await vm.CreateFolderFromTwoAppsAsync(chromeItem, vscodeItem);
+            Assert.NotNull(folderBox);
+            Assert.Equal(2, folderBox!.Applications.Count);
+            Assert.True(vm.FolderPopup.IsOpen);
 
             await vm.SwapWithMicrosoftTaskbarAsync();
             Assert.True(vm.IsDockyraActive);

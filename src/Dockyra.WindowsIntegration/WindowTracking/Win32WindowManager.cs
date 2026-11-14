@@ -221,9 +221,7 @@ public sealed class Win32WindowManager : IWindowManager
                 // Process may have exited or restricted access (UIPI).
             }
 
-            byte[]? iconBytes = !string.IsNullOrWhiteSpace(executablePath)
-                ? Shell.Win32IconExtractor.ExtractNativeBgra32(executablePath)
-                : null;
+            byte[]? iconBytes = Shell.Win32IconExtractor.ExtractWindowOrExecutableIconBgra32(hWnd, executablePath);
 
             WindowStateKind state = Win32NativeMethods.IsIconic(hWnd)
                 ? WindowStateKind.Minimized

@@ -226,6 +226,7 @@ public partial class TaskbarWindow : Window
     private void OnGroupPillDragOver(object sender, DragEventArgs e)
     {
         if (e.Data.GetDataPresent("Dockyra.TaskbarGroup") ||
+            e.Data.GetDataPresent("Dockyra.UnifiedApp") ||
             e.Data.GetDataPresent("Dockyra.PinnedApp") ||
             e.Data.GetDataPresent("Dockyra.OpenWindow"))
         {
@@ -252,6 +253,19 @@ public partial class TaskbarWindow : Window
             return;
         }
 
+        if (e.Data.GetDataPresent("Dockyra.UnifiedApp") &&
+            e.Data.GetData("Dockyra.UnifiedApp") is UnifiedTaskbarAppItem unifiedApp)
+        {
+            string? path = unifiedApp.LaunchPath ?? unifiedApp.PrimaryWindow?.ExecutablePath;
+            string name = unifiedApp.PinnedSource?.DisplayName ?? unifiedApp.PrimaryWindow?.ProcessName ?? unifiedApp.DisplayName;
+            if (!string.IsNullOrWhiteSpace(path))
+            {
+                GroupFlyoutPopup.PlacementTarget = targetFe;
+                await _viewModel.DropApplicationOntoGroupAsync(targetGroup, name, path);
+            }
+            return;
+        }
+
         if (e.Data.GetDataPresent("Dockyra.PinnedApp") &&
             e.Data.GetData("Dockyra.PinnedApp") is PinnedTaskbarItem pinnedApp)
         {
@@ -269,12 +283,12 @@ public partial class TaskbarWindow : Window
         }
     }
 
-    private void OnPinnedAppPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    private void OnUnifiedAppPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         _dragStartPoint = e.GetPosition(null);
     }
 
-    private void OnPinnedAppPreviewMouseMove(object sender, MouseEventArgs e)
+    private void OnUnifiedAppPreviewMouseMove(object sender, MouseEventArgs e)
     {
         if (e.LeftButton != MouseButtonState.Pressed)
         {
@@ -289,36 +303,42 @@ public partial class TaskbarWindow : Window
             return;
         }
 
-        if (sender is FrameworkElement fe && fe.DataContext is PinnedTaskbarItem pinned)
+        if (sender is FrameworkElement fe && fe.DataContext is UnifiedTaskbarAppItem item)
         {
-            DragDrop.DoDragDrop(fe, new DataObject("Dockyra.PinnedApp", pinned), DragDropEffects.Copy);
+            DragDrop.DoDragDrop(fe, new DataObject("Dockyra.UnifiedApp", item), DragDropEffects.Copy);
         }
     }
 
-    private void OnOpenWindowPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    private void OnUnifiedAppDragOver(object sender, DragEventArgs e)
     {
-        _dragStartPoint = e.GetPosition(null);
+        if (e.Data.GetDataPresent("Dockyra.UnifiedApp"))
+        {
+            e.Effects = DragDropEffects.Copy;
+        }
+        else
+        {
+            e.Effects = DragDropEffects.None;
+        }
+        e.Handled = true;
     }
 
-    private void OnOpenWindowPreviewMouseMove(object sender, MouseEventArgs e)
+    private async void OnUnifiedAppDrop(object sender, DragEventArgs e)
     {
-        if (e.LeftButton != MouseButtonState.Pressed)
+        if (sender is not FrameworkElement targetFe ||
+            targetFe.DataContext is not UnifiedTaskbarAppItem targetItem ||
+            !e.Data.GetDataPresent("Dockyra.UnifiedApp") ||
+            e.Data.GetData("Dockyra.UnifiedApp") is not UnifiedTaskbarAppItem draggedItem)
         {
             return;
         }
 
-        Point current = e.GetPosition(null);
-        Vector diff = _dragStartPoint - current;
-        if (Math.Abs(diff.X) <= SystemParameters.MinimumHorizontalDragDistance &&
-            Math.Abs(diff.Y) <= SystemParameters.MinimumVerticalDragDistance)
+        if (string.Equals(draggedItem.Id, targetItem.Id, StringComparison.OrdinalIgnoreCase))
         {
             return;
         }
 
-        if (sender is FrameworkElement fe && fe.DataContext is WindowInfo win)
-        {
-            DragDrop.DoDragDrop(fe, new DataObject("Dockyra.OpenWindow", win), DragDropEffects.Copy);
-        }
+        GroupFlyoutPopup.PlacementTarget = MainTaskbarBorder;
+        await _viewModel.CreateFolderFromTwoAppsAsync(draggedItem, targetItem);
     }
 
     private void OnTaskbarBorderMouseLeftButtonDown(object sender, MouseButtonEventArgs e)

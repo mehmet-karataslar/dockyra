@@ -29,5 +29,8 @@ public sealed class ApplicationGroup
     public FolderViewMode ViewMode { get; set; } = FolderViewMode.Grid;
     public List<ApplicationEntry> Applications { get; set; } = [];
     public List<FolderItem> SubFolders { get; set; } = [];
+
+    [JsonIgnore]
+    public IReadOnlyList<ApplicationEntry> PreviewApplications => Applications.Take(4).ToList();
 }
 

@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Dockyra.Application.Interfaces;
@@ -10,6 +11,23 @@ using Dockyra.Domain.Enums;
 using Dockyra.Presentation.Wpf.DesignTokens;
 
 namespace Dockyra.Presentation.Wpf.ViewModels;
+
+public sealed partial class UnifiedTaskbarAppItem : ObservableObject
+{
+    public required string Id { get; init; }
+    public required string DisplayName { get; init; }
+    public string? LaunchPath { get; init; }
+    public byte[]? IconBgra32 { get; init; }
+    public bool IsPinned { get; init; }
+    public bool IsRunning { get; init; }
+    public bool IsActive { get; init; }
+    public int WindowCount { get; init; }
+    public WindowInfo? PrimaryWindow { get; init; }
+    public PinnedTaskbarItem? PinnedSource { get; init; }
+    public string TooltipText => IsRunning && PrimaryWindow is not null
+        ? $"{DisplayName} — {PrimaryWindow.Title}"
+        : DisplayName;
+}
 
 public sealed partial class TaskbarViewModel : ObservableObject, IDisposable
 {
@@ -55,7 +73,14 @@ public sealed partial class TaskbarViewModel : ObservableObject, IDisposable
 
         _windowManager.WindowsChanged += OnWindowsChanged;
         _powerManagementService.PowerModeChanged += OnPowerModeChanged;
+        FolderPopup.GroupModified += OnFolderPopupGroupModified;
         CurrentPowerMode = _powerManagementService.CurrentMode;
+    }
+
+    private async void OnFolderPopupGroupModified(object? sender, EventArgs e)
+    {
+        await ReloadGroupsForActiveProfileAsync(CancellationToken.None);
+        RebuildUnifiedTaskbarItems();
     }
 
     public event EventHandler? ConfigurationUpdated;
@@ -66,6 +91,7 @@ public sealed partial class TaskbarViewModel : ObservableObject, IDisposable
     public ObservableCollection<ApplicationGroup> Groups { get; } = [];
     public ObservableCollection<PinnedTaskbarItem> PinnedApps { get; } = [];
     public ObservableCollection<WindowInfo> OpenWindows { get; } = [];
+    public ObservableCollection<UnifiedTaskbarAppItem> UnifiedTaskbarItems { get; } = [];
     public ObservableCollection<WorkProfile> Profiles { get; } = [];
 
     [ObservableProperty]
@@ -384,7 +410,106 @@ public sealed partial class TaskbarViewModel : ObservableObject, IDisposable
 
         ApplicationGroup? refreshed = Groups.FirstOrDefault(g => g.Id == targetGroup.Id) ?? targetGroup;
         FolderPopup.LoadGroup(refreshed);
+        RebuildUnifiedTaskbarItems();
         StatusBanner = $"'{displayName}' → '{targetGroup.Name}' kutusuna eklendi!";
+    }
+
+    public async Task<ApplicationGroup?> CreateFolderFromTwoAppsAsync(
+        UnifiedTaskbarAppItem draggedItem,
+        UnifiedTaskbarAppItem targetItem,
+        CancellationToken cancellationToken = default)
+    {
+        if (draggedItem is null || targetItem is null || string.Equals(draggedItem.Id, targetItem.Id, StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        string? path1 = draggedItem.LaunchPath ?? draggedItem.PrimaryWindow?.ExecutablePath;
+        string? path2 = targetItem.LaunchPath ?? targetItem.PrimaryWindow?.ExecutablePath;
+        if (string.IsNullOrWhiteSpace(path1) || string.IsNullOrWhiteSpace(path2))
+        {
+            return null;
+        }
+
+        string[] softColors = ["#5B7C99", "#5E8C76", "#847996", "#A68A71", "#5A8F99", "#9E6B7B"];
+        string folderColor = softColors[Groups.Count % softColors.Length];
+        int folderNumber = Groups.Count + 1;
+        string folderName = $"Kutu {folderNumber}";
+
+        OperationResult<ApplicationGroup> created = await _groupService.CreateGroupAsync(
+            folderName,
+            folderColor,
+            "FolderGlyph",
+            cancellationToken);
+
+        if (!created.IsSuccess || created.Value is null)
+        {
+            return null;
+        }
+
+        string groupId = created.Value.Id;
+
+        await _groupService.AddApplicationToGroupAsync(
+            groupId,
+            new ApplicationEntry
+            {
+                Id = $"app-{Guid.NewGuid():N}"[..12],
+                DisplayName = targetItem.DisplayName,
+                ExecutablePath = path2,
+                SortOrder = 0
+            },
+            cancellationToken);
+
+        await _groupService.AddApplicationToGroupAsync(
+            groupId,
+            new ApplicationEntry
+            {
+                Id = $"app-{Guid.NewGuid():N}"[..12],
+                DisplayName = draggedItem.DisplayName,
+                ExecutablePath = path1,
+                SortOrder = 1
+            },
+            cancellationToken);
+
+        await ReloadGroupsForActiveProfileAsync(cancellationToken);
+        RebuildUnifiedTaskbarItems();
+
+        ApplicationGroup? finalGroup = Groups.FirstOrDefault(g => g.Id == groupId);
+        if (finalGroup is not null)
+        {
+            FolderPopup.LoadGroup(finalGroup);
+            StatusBanner = $"📦 '{targetItem.DisplayName}' ve '{draggedItem.DisplayName}' birleştirilerek '{finalGroup.Name}' oluşturuldu!";
+        }
+
+        return finalGroup;
+    }
+
+    [RelayCommand]
+    public async Task ClickUnifiedTaskbarItemAsync(UnifiedTaskbarAppItem? item, CancellationToken cancellationToken = default)
+    {
+        if (item is null)
+        {
+            return;
+        }
+
+        // If the app is currently running, behave like Windows 11 Taskbar: focus/restore/minimize its window!
+        if (item.IsRunning && item.PrimaryWindow is not null)
+        {
+            await ActivateOrToggleWindowAsync(item.PrimaryWindow, cancellationToken);
+            return;
+        }
+
+        // Otherwise launch the pinned shortcut or executable
+        if (!string.IsNullOrWhiteSpace(item.LaunchPath) && _applicationLauncher is not null)
+        {
+            LaunchResult result = await _applicationLauncher.LaunchAsync(
+                new ApplicationLaunchRequest(item.LaunchPath),
+                cancellationToken);
+
+            StatusBanner = result.IsSuccess
+                ? $"{item.DisplayName} başlatıldı."
+                : result.ErrorMessage ?? "Uygulama başlatılamadı.";
+        }
     }
 
     [RelayCommand]
@@ -516,19 +641,20 @@ public sealed partial class TaskbarViewModel : ObservableObject, IDisposable
         IReadOnlyList<ApplicationGroup> allGroups = await _groupService.GetAllGroupsAsync(cancellationToken);
         Groups.Clear();
 
-        HashSet<string>? filterIds = ActiveProfile is { EnabledGroupIds.Count: > 0 }
-            ? new HashSet<string>(ActiveProfile.EnabledGroupIds, StringComparer.Ordinal)
-            : null;
-
-        filterIds?.Add("grp-pinned");
+        string[] legacyDefaultIds = ["grp-pinned", "grp-dev", "grp-browsers", "grp-comm", "grp-system"];
 
         foreach (ApplicationGroup group in allGroups.OrderBy(g => g.SortOrder))
         {
-            if (filterIds is null || filterIds.Contains(group.Id))
+            // Do not clutter taskbar with empty folders or legacy pre-seeded category pills
+            if (group.Applications.Count == 0 || legacyDefaultIds.Contains(group.Id, StringComparer.OrdinalIgnoreCase))
             {
-                Groups.Add(group);
+                continue;
             }
+
+            Groups.Add(group);
         }
+
+        RebuildUnifiedTaskbarItems();
     }
 
     private void OnWindowsChanged(object? sender, WindowsChangedEventArgs e)
@@ -552,6 +678,153 @@ public sealed partial class TaskbarViewModel : ObservableObject, IDisposable
         {
             OpenWindows.Add(win);
         }
+
+        RebuildUnifiedTaskbarItems();
+    }
+
+    private void RebuildUnifiedTaskbarItems()
+    {
+        UnifiedTaskbarItems.Clear();
+
+        // Collect apps that are already placed inside an Android folder box so they don't duplicate on the main dock unless running
+        var folderAppNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var folderAppPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (ApplicationGroup grp in Groups)
+        {
+            foreach (ApplicationEntry entry in grp.Applications)
+            {
+                if (!string.IsNullOrWhiteSpace(entry.DisplayName))
+                {
+                    folderAppNames.Add(NormalizeToken(entry.DisplayName));
+                }
+                if (!string.IsNullOrWhiteSpace(entry.ExecutablePath))
+                {
+                    folderAppPaths.Add(Path.GetFileNameWithoutExtension(entry.ExecutablePath));
+                }
+            }
+        }
+
+        var matchedWindowIds = new HashSet<ulong>();
+
+        // 1. Pinned apps (merged with running windows if the pinned app is currently open)
+        foreach (PinnedTaskbarItem pin in PinnedApps)
+        {
+            string normPin = NormalizeToken(pin.DisplayName);
+            List<WindowInfo> matchingWindows = OpenWindows
+                .Where(w => IsPinMatchingWindow(pin, w))
+                .ToList();
+
+            foreach (WindowInfo mw in matchingWindows)
+            {
+                matchedWindowIds.Add(mw.Id.Value);
+            }
+
+            // If the user put this pinned app inside an Android Folder Box and it's NOT currently running, keep it inside the folder box
+            if (matchingWindows.Count == 0 && folderAppNames.Contains(normPin))
+            {
+                continue;
+            }
+
+            WindowInfo? activeOrFirst = matchingWindows.FirstOrDefault(w => w.IsActive) ?? matchingWindows.FirstOrDefault();
+            byte[]? bestIcon = activeOrFirst?.IconBgra32 ?? pin.IconBgra32;
+
+            UnifiedTaskbarItems.Add(new UnifiedTaskbarAppItem
+            {
+                Id = pin.Id,
+                DisplayName = activeOrFirst is not null ? activeOrFirst.Title : pin.DisplayName,
+                LaunchPath = pin.ShortcutPath,
+                IconBgra32 = bestIcon,
+                IsPinned = true,
+                IsRunning = matchingWindows.Count > 0,
+                IsActive = matchingWindows.Any(w => w.IsActive),
+                WindowCount = matchingWindows.Count,
+                PrimaryWindow = activeOrFirst,
+                PinnedSource = pin
+            });
+        }
+
+        // 2. Remaining open windows that are not pinned
+        foreach (WindowInfo win in OpenWindows)
+        {
+            if (matchedWindowIds.Contains(win.Id.Value))
+            {
+                continue;
+            }
+
+            UnifiedTaskbarItems.Add(new UnifiedTaskbarAppItem
+            {
+                Id = $"win-{win.Id.Value}",
+                DisplayName = win.Title,
+                LaunchPath = win.ExecutablePath,
+                IconBgra32 = win.IconBgra32,
+                IsPinned = false,
+                IsRunning = true,
+                IsActive = win.IsActive,
+                WindowCount = 1,
+                PrimaryWindow = win
+            });
+        }
+    }
+
+    private static bool IsPinMatchingWindow(PinnedTaskbarItem pin, WindowInfo win)
+    {
+        string pinNorm = NormalizeToken(pin.DisplayName);
+        string procNorm = NormalizeToken(win.ProcessName);
+        string exeNorm = !string.IsNullOrWhiteSpace(win.ExecutablePath)
+            ? NormalizeToken(Path.GetFileNameWithoutExtension(win.ExecutablePath))
+            : string.Empty;
+
+        if (string.IsNullOrEmpty(pinNorm))
+        {
+            return false;
+        }
+
+        if (string.Equals(pinNorm, procNorm, StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(pinNorm, exeNorm, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        if (pinNorm.Length >= 4 && procNorm.Length >= 4 &&
+            (pinNorm.Contains(procNorm, StringComparison.OrdinalIgnoreCase) ||
+             procNorm.Contains(pinNorm, StringComparison.OrdinalIgnoreCase)))
+        {
+            return true;
+        }
+
+        // Common Windows 11 app aliases
+        if ((pinNorm.Contains("visualstudiocode") || pinNorm == "vscode") && procNorm == "code")
+        {
+            return true;
+        }
+        if ((pinNorm.Contains("fileexplorer") || pinNorm.Contains("dosyagezgini") || pinNorm.Contains("windowsexplorer")) && procNorm == "explorer")
+        {
+            return true;
+        }
+        if (pinNorm.Contains("edge") && procNorm == "msedge")
+        {
+            return true;
+        }
+        if (pinNorm.Contains("chrome") && procNorm == "chrome")
+        {
+            return true;
+        }
+        if (pinNorm.Contains("terminal") && procNorm == "windowsterminal")
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    private static string NormalizeToken(string? input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+        {
+            return string.Empty;
+        }
+
+        return new string(input.Where(char.IsLetterOrDigit).Select(char.ToLowerInvariant).ToArray());
     }
 
     public void Dispose()

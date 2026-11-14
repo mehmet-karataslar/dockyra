@@ -214,7 +214,9 @@ public sealed class TaskbarCoexistenceService : ITaskbarVisibilityService
                     .ToArray()).Trim('-');
 
                 string categoryGroupId = ClassifyShortcutByName(displayName);
-                byte[]? iconBytes = Win32IconExtractor.ExtractNativeBgra32(filePath);
+                string? targetExePath = Win32IconExtractor.ResolveShortcutTargetPath(filePath);
+                string iconSourcePath = !string.IsNullOrWhiteSpace(targetExePath) ? targetExePath : filePath;
+                byte[]? iconBytes = Win32IconExtractor.ExtractNativeBgra32(iconSourcePath);
                 results.Add(new PinnedTaskbarItem(
                     Id: $"pin-{slug}",
                     DisplayName: displayName,

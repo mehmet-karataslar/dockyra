@@ -20,7 +20,7 @@
   </Window.Resources>
 
   <Grid Opacity="{Binding BarOpacity}">
-    <!-- Upward Folder Flyout Box (Opens directly above whichever Group Button was clicked) -->
+    <!-- Upward Android-Style Folder Flyout Box -->
     <Popup x:Name="GroupFlyoutPopup"
            IsOpen="{Binding FolderPopup.IsOpen, Mode=TwoWay}"
            Placement="Top"
@@ -42,7 +42,6 @@
             MouseLeftButtonDown="OnTaskbarBorderMouseLeftButtonDown">
       <Grid>
         <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="Auto" />
           <ColumnDefinition Width="Auto" />
           <ColumnDefinition Width="*" />
           <ColumnDefinition Width="Auto" />
@@ -84,80 +83,13 @@
           </StackPanel>
         </Border>
 
-        <!-- ISLAND 2: Segmented Group / Folder Boxes (Click to Pop Upward, Drag Apps Here!) -->
+        <!-- ISLAND 2: Unified Dock (Android Mini Folder Boxes + Unified Pinned & Running Windows Icons) -->
         <Border Grid.Column="1"
                 Background="#28000000"
                 BorderBrush="#22FFFFFF"
                 BorderThickness="1"
                 CornerRadius="{Binding GroupPillCornerRadius}"
-                Padding="6,3"
-                Margin="0,0,8,0"
-                VerticalAlignment="Center">
-          <ItemsControl ItemsSource="{Binding Groups}">
-            <ItemsControl.ItemsPanel>
-              <ItemsPanelTemplate>
-                <StackPanel Orientation="Horizontal" />
-              </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            <ItemsControl.ItemTemplate>
-              <DataTemplate>
-                <Border CornerRadius="{Binding DataContext.GroupPillCornerRadius, RelativeSource={RelativeSource AncestorType=Window}}"
-                        Background="{Binding ColorHex, Converter={StaticResource HexBrush}, ConverterParameter=42}"
-                        BorderBrush="{Binding ColorHex, Converter={StaticResource HexBrush}, ConverterParameter=110}"
-                        BorderThickness="1"
-                        Margin="0,0,5,0">
-                  <Button Click="OnGroupPillButtonClick"
-                          Tag="{Binding}"
-                          AllowDrop="True"
-                          PreviewMouseLeftButtonDown="OnGroupPillPreviewMouseLeftButtonDown"
-                          PreviewMouseMove="OnGroupPillPreviewMouseMove"
-                          DragOver="OnGroupPillDragOver"
-                          Drop="OnGroupPillDrop"
-                          Background="Transparent"
-                          BorderThickness="0"
-                          Padding="10,4"
-                          ToolTip="Tıklayın: Kutu yukarı açılsın | Uygulama sürükleyip buraya bırakın!">
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                      <Border Width="8"
-                              Height="8"
-                              CornerRadius="4"
-                              Background="{Binding ColorHex, Converter={StaticResource HexBrush}}"
-                              Margin="0,0,6,0"
-                              VerticalAlignment="Center" />
-                      <TextBlock Text="{Binding Name}"
-                                 Foreground="{DynamicResource Theme.Brush.TextPrimary}"
-                                 FontWeight="Bold"
-                                 FontSize="12"
-                                 VerticalAlignment="Center" />
-                      <Border Background="#40000000"
-                              CornerRadius="5"
-                              Padding="5,1"
-                              Margin="6,0,0,0"
-                              VerticalAlignment="Center">
-                        <TextBlock Text="{Binding Applications.Count}"
-                                   Foreground="{DynamicResource Theme.Brush.TextPrimary}"
-                                   FontSize="10.5"
-                                   FontWeight="Bold" />
-                      </Border>
-                      <TextBlock Text=" ▲"
-                                 Foreground="{DynamicResource Theme.Brush.TextSecondary}"
-                                 FontSize="9"
-                                 VerticalAlignment="Center" />
-                    </StackPanel>
-                  </Button>
-                </Border>
-              </DataTemplate>
-            </ItemsControl.ItemTemplate>
-          </ItemsControl>
-        </Border>
-
-        <!-- ISLAND 3: Real Pinned Taskbar Icons + Active Open Window Icons (Live Size & Shape!) -->
-        <Border Grid.Column="2"
-                Background="#28000000"
-                BorderBrush="#22FFFFFF"
-                BorderThickness="1"
-                CornerRadius="{Binding GroupPillCornerRadius}"
-                Padding="8,2"
+                Padding="10,3"
                 Margin="0,0,8,0"
                 VerticalAlignment="Center"
                 Visibility="{Binding ShowOpenWindows, Converter={StaticResource BoolToVis}}">
@@ -166,8 +98,9 @@
                         VerticalScrollBarVisibility="Disabled"
                         PreviewMouseWheel="OnWindowsScrollViewerPreviewMouseWheel">
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-              <!-- Real Pinned Taskbar App Icons (Live Shaped & Sized) -->
-              <ItemsControl ItemsSource="{Binding PinnedApps}">
+
+              <!-- 1. Android-Style Mini Folder Boxes (2x2 Mini Icon Grid inside each box!) -->
+              <ItemsControl ItemsSource="{Binding Groups}">
                 <ItemsControl.ItemsPanel>
                   <ItemsPanelTemplate>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" />
@@ -176,90 +109,51 @@
                 <ItemsControl.ItemTemplate>
                   <DataTemplate>
                     <Border CornerRadius="{Binding DataContext.IconShapeCornerRadius, RelativeSource={RelativeSource AncestorType=Window}}"
-                            Background="#24FFFFFF"
-                            BorderBrush="#30FFFFFF"
-                            BorderThickness="1"
-                            Margin="2,0">
-                      <Button Command="{Binding DataContext.LaunchPinnedAppCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                              CommandParameter="{Binding}"
-                              PreviewMouseLeftButtonDown="OnPinnedAppPreviewMouseLeftButtonDown"
-                              PreviewMouseMove="OnPinnedAppPreviewMouseMove"
+                            Background="{Binding ColorHex, Converter={StaticResource HexBrush}, ConverterParameter=52}"
+                            BorderBrush="{Binding ColorHex, Converter={StaticResource HexBrush}, ConverterParameter=140}"
+                            BorderThickness="1.5"
+                            Margin="3,0">
+                      <Button Click="OnGroupPillButtonClick"
+                              Tag="{Binding}"
+                              AllowDrop="True"
+                              PreviewMouseLeftButtonDown="OnGroupPillPreviewMouseLeftButtonDown"
+                              PreviewMouseMove="OnGroupPillPreviewMouseMove"
+                              DragOver="OnGroupPillDragOver"
+                              Drop="OnGroupPillDrop"
                               Background="Transparent"
                               BorderThickness="0"
                               Padding="6,4"
-                              ToolTip="{Binding DisplayName}">
-                        <Grid Width="{Binding DataContext.IconSize, RelativeSource={RelativeSource AncestorType=Window}}"
-                              Height="{Binding DataContext.IconSize, RelativeSource={RelativeSource AncestorType=Window}}">
-                          <Image Source="{Binding IconBgra32, Converter={StaticResource IconConverter}}"
-                                 Width="{Binding DataContext.IconSize, RelativeSource={RelativeSource AncestorType=Window}}"
-                                 Height="{Binding DataContext.IconSize, RelativeSource={RelativeSource AncestorType=Window}}"
-                                 RenderOptions.BitmapScalingMode="HighQuality"
-                                 Visibility="{Binding IconBgra32, Converter={StaticResource BytesVisConverter}}" />
-                          <TextBlock Text="📌"
-                                     FontSize="14"
-                                     HorizontalAlignment="Center"
-                                     VerticalAlignment="Center"
-                                     Visibility="{Binding IconBgra32, Converter={StaticResource BytesVisConverter}, ConverterParameter=Invert}" />
-                        </Grid>
-                      </Button>
-                    </Border>
-                  </DataTemplate>
-                </ItemsControl.ItemTemplate>
-              </ItemsControl>
-
-              <!-- Visual Divider between Pinned Icons and Open Windows -->
-              <Border Width="1.5"
-                      Height="22"
-                      Background="{DynamicResource Token.Brush.Accent}"
-                      Opacity="0.5"
-                      Margin="8,0"
-                      VerticalAlignment="Center" />
-
-              <!-- Open Running Windows with Real Icons (Live Shaped & Sized) -->
-              <ItemsControl ItemsSource="{Binding OpenWindows}">
-                <ItemsControl.ItemsPanel>
-                  <ItemsPanelTemplate>
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" />
-                  </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
-                  <DataTemplate>
-                    <Border CornerRadius="{Binding DataContext.IconShapeCornerRadius, RelativeSource={RelativeSource AncestorType=Window}}"
-                            Background="#24FFFFFF"
-                            BorderBrush="#30FFFFFF"
-                            BorderThickness="1"
-                            Margin="2,0">
-                      <Button Command="{Binding DataContext.ActivateOrToggleWindowCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                              CommandParameter="{Binding}"
-                              PreviewMouseLeftButtonDown="OnOpenWindowPreviewMouseLeftButtonDown"
-                              PreviewMouseMove="OnOpenWindowPreviewMouseMove"
-                              Background="Transparent"
-                              BorderThickness="0"
-                              Padding="8,4"
-                              MaxWidth="190"
-                              ToolTip="{Binding Title}">
+                              ToolTip="Tıklayın: Klasör kutusu açılsın | Üstüne uygulama sürükleyip bırakın!">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                          <Grid Width="{Binding DataContext.IconSize, RelativeSource={RelativeSource AncestorType=Window}}"
-                                Height="{Binding DataContext.IconSize, RelativeSource={RelativeSource AncestorType=Window}}"
-                                Margin="0,0,6,0"
-                                VerticalAlignment="Center">
-                            <Image Source="{Binding IconBgra32, Converter={StaticResource IconConverter}}"
-                                   Width="{Binding DataContext.IconSize, RelativeSource={RelativeSource AncestorType=Window}}"
-                                   Height="{Binding DataContext.IconSize, RelativeSource={RelativeSource AncestorType=Window}}"
-                                   RenderOptions.BitmapScalingMode="HighQuality"
-                                   Visibility="{Binding IconBgra32, Converter={StaticResource BytesVisConverter}}" />
-                            <TextBlock Text="🪟"
-                                       FontSize="13"
-                                       HorizontalAlignment="Center"
-                                       VerticalAlignment="Center"
-                                       Visibility="{Binding IconBgra32, Converter={StaticResource BytesVisConverter}, ConverterParameter=Invert}" />
-                          </Grid>
-                          <TextBlock Text="{Binding Title}"
+                          <!-- Android 2x2 Mini Icon Grid Box -->
+                          <Border Width="26"
+                                  Height="26"
+                                  CornerRadius="6"
+                                  Background="#38000000"
+                                  Padding="2">
+                            <ItemsControl ItemsSource="{Binding PreviewApplications}">
+                              <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                  <UniformGrid Rows="2" Columns="2" />
+                                </ItemsPanelTemplate>
+                              </ItemsControl.ItemsPanel>
+                              <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                  <Image Source="{Binding IconBgra32, Converter={StaticResource IconConverter}}"
+                                         Width="10"
+                                         Height="10"
+                                         Margin="0.5"
+                                         RenderOptions.BitmapScalingMode="HighQuality" />
+                                </DataTemplate>
+                              </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                          </Border>
+
+                          <TextBlock Text="{Binding Name}"
                                      Foreground="{DynamicResource Theme.Brush.TextPrimary}"
-                                     FontWeight="SemiBold"
+                                     FontWeight="Bold"
                                      FontSize="11.5"
-                                     TextTrimming="CharacterEllipsis"
-                                     MaxWidth="120"
+                                     Margin="6,0,0,0"
                                      VerticalAlignment="Center" />
                         </StackPanel>
                       </Button>
@@ -267,12 +161,114 @@
                   </DataTemplate>
                 </ItemsControl.ItemTemplate>
               </ItemsControl>
+
+              <!-- 2. Unified Pinned & Active Windows Taskbar Icons (Drag 1 Icon Onto Another to Create an Android Folder Box!) -->
+              <ItemsControl ItemsSource="{Binding UnifiedTaskbarItems}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" />
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <Border CornerRadius="{Binding DataContext.IconShapeCornerRadius, RelativeSource={RelativeSource AncestorType=Window}}"
+                            Margin="3,0"
+                            BorderThickness="1">
+                      <Border.Style>
+                        <Style TargetType="Border">
+                          <Setter Property="Background" Value="#18FFFFFF" />
+                          <Setter Property="BorderBrush" Value="#24FFFFFF" />
+                          <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsRunning}" Value="True">
+                              <Setter Property="Background" Value="#2EFFFFFF" />
+                              <Setter Property="BorderBrush" Value="#48FFFFFF" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding IsActive}" Value="True">
+                              <Setter Property="Background" Value="#42FFFFFF" />
+                              <Setter Property="BorderBrush" Value="{DynamicResource Token.Brush.Accent}" />
+                            </DataTrigger>
+                          </Style.Triggers>
+                        </Style>
+                      </Border.Style>
+
+                      <Button Command="{Binding DataContext.ClickUnifiedTaskbarItemCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                              CommandParameter="{Binding}"
+                              AllowDrop="True"
+                              PreviewMouseLeftButtonDown="OnUnifiedAppPreviewMouseLeftButtonDown"
+                              PreviewMouseMove="OnUnifiedAppPreviewMouseMove"
+                              DragOver="OnUnifiedAppDragOver"
+                              Drop="OnUnifiedAppDrop"
+                              Background="Transparent"
+                              BorderThickness="0"
+                              Padding="7,4"
+                              ToolTip="{Binding TooltipText}">
+                        <Grid>
+                          <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                          </Grid.RowDefinitions>
+
+                          <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Grid Width="{Binding DataContext.IconSize, RelativeSource={RelativeSource AncestorType=Window}}"
+                                  Height="{Binding DataContext.IconSize, RelativeSource={RelativeSource AncestorType=Window}}"
+                                  VerticalAlignment="Center">
+                              <Image Source="{Binding IconBgra32, Converter={StaticResource IconConverter}}"
+                                     Width="{Binding DataContext.IconSize, RelativeSource={RelativeSource AncestorType=Window}}"
+                                     Height="{Binding DataContext.IconSize, RelativeSource={RelativeSource AncestorType=Window}}"
+                                     RenderOptions.BitmapScalingMode="HighQuality"
+                                     Visibility="{Binding IconBgra32, Converter={StaticResource BytesVisConverter}}" />
+                              <TextBlock Text="🪟"
+                                         FontSize="14"
+                                         HorizontalAlignment="Center"
+                                         VerticalAlignment="Center"
+                                         Visibility="{Binding IconBgra32, Converter={StaticResource BytesVisConverter}, ConverterParameter=Invert}" />
+                            </Grid>
+
+                            <!-- Show active window title softly next to unpinned running windows or focused window -->
+                            <TextBlock Text="{Binding DisplayName}"
+                                       Foreground="{DynamicResource Theme.Brush.TextPrimary}"
+                                       FontWeight="SemiBold"
+                                       FontSize="11.5"
+                                       TextTrimming="CharacterEllipsis"
+                                       MaxWidth="115"
+                                       Margin="6,0,2,0"
+                                       VerticalAlignment="Center"
+                                       Visibility="{Binding IsRunning, Converter={StaticResource BoolToVis}}" />
+                          </StackPanel>
+
+                          <!-- Windows 11 Style Bottom Running / Active Pill Indicator -->
+                          <Border Grid.Row="1"
+                                  Height="3"
+                                  CornerRadius="1.5"
+                                  Margin="0,3,0,0"
+                                  HorizontalAlignment="Center"
+                                  Visibility="{Binding IsRunning, Converter={StaticResource BoolToVis}}">
+                            <Border.Style>
+                              <Style TargetType="Border">
+                                <Setter Property="Width" Value="8" />
+                                <Setter Property="Background" Value="#AAFFFFFF" />
+                                <Style.Triggers>
+                                  <DataTrigger Binding="{Binding IsActive}" Value="True">
+                                    <Setter Property="Width" Value="18" />
+                                    <Setter Property="Background" Value="{DynamicResource Token.Brush.Accent}" />
+                                  </DataTrigger>
+                                </Style.Triggers>
+                              </Style>
+                            </Border.Style>
+                          </Border>
+                        </Grid>
+                      </Button>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+
             </StackPanel>
           </ScrollViewer>
         </Border>
 
-        <!-- ISLAND 4: System Status Tray (Wi-Fi, Bluetooth, Battery First + Clock + Swap) -->
-        <Border Grid.Column="3"
+        <!-- ISLAND 3: System Status Tray (Wi-Fi, Bluetooth, Battery First + Clock + Swap) -->
+        <Border Grid.Column="2"
                 Background="#28000000"
                 BorderBrush="#22FFFFFF"
                 BorderThickness="1"
