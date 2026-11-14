@@ -92,6 +92,45 @@ public sealed class Win32WindowManager : IWindowManager
             : OperationResult.Failure("WIN32_CLOSE_FAILED", "Could not post WM_CLOSE message.", ErrorCategory.WindowsApi));
     }
 
+    public Task<OperationResult> TerminateProcessAsync(int processId, CancellationToken cancellationToken = default)
+    {
+        if (processId <= 4 || processId == _currentProcessId)
+        {
+            return Task.FromResult(OperationResult.Failure(
+                "PROCESS_PROTECTED",
+                "Cannot terminate system or current Dockyra process.",
+                ErrorCategory.Security));
+        }
+
+        try
+        {
+            using var proc = Process.GetProcessById(processId);
+            string procName = proc.ProcessName ?? string.Empty;
+            if (string.Equals(procName, "explorer", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(procName, "csrss", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(procName, "winlogon", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(procName, "dwm", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(procName, "svchost", StringComparison.OrdinalIgnoreCase))
+            {
+                return Task.FromResult(OperationResult.Failure(
+                    "SHELL_PROCESS_PROTECTED",
+                    $"Protected Windows process '{procName}' cannot be terminated.",
+                    ErrorCategory.Security));
+            }
+
+            proc.Kill(entireProcessTree: false);
+            _coalescer.Signal();
+            return Task.FromResult(OperationResult.Success());
+        }
+        catch (Exception ex)
+        {
+            return Task.FromResult(OperationResult.Failure(
+                "PROCESS_TERMINATE_FAILED",
+                ex.Message,
+                ErrorCategory.WindowsApi));
+        }
+    }
+
     private void TryInstallHooks()
     {
         try

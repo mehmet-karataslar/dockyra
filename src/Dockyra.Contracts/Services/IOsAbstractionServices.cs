@@ -16,6 +16,8 @@ public interface IWindowManager : IDisposable
     Task<OperationResult> RestoreWindowAsync(WindowId windowId, CancellationToken cancellationToken = default);
 
     Task<OperationResult> CloseWindowAsync(WindowId windowId, CancellationToken cancellationToken = default);
+
+    Task<OperationResult> TerminateProcessAsync(int processId, CancellationToken cancellationToken = default);
 }
 
 public interface IMonitorService

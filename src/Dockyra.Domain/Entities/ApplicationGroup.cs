@@ -16,6 +16,18 @@ public sealed class ApplicationEntry
 
     [JsonIgnore]
     public byte[]? IconBgra32 { get; set; }
+
+    [JsonIgnore]
+    public bool IsRunning { get; set; }
+
+    [JsonIgnore]
+    public bool IsActive { get; set; }
+
+    [JsonIgnore]
+    public ulong? RunningWindowHandle { get; set; }
+
+    [JsonIgnore]
+    public int? RunningProcessId { get; set; }
 }
 
 public sealed class ApplicationGroup
@@ -32,5 +44,11 @@ public sealed class ApplicationGroup
 
     [JsonIgnore]
     public IReadOnlyList<ApplicationEntry> PreviewApplications => Applications.Take(4).ToList();
+
+    [JsonIgnore]
+    public bool HasRunningApplications => Applications.Any(a => a.IsRunning);
+
+    [JsonIgnore]
+    public bool HasActiveApplication => Applications.Any(a => a.IsActive);
 }
 
